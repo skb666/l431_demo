@@ -1,0 +1,27 @@
+[
+    {
+        "name": "bld",
+        "start": "0x08000000",
+        "size": "0x8000"
+    },
+    {
+        "name": "param",
+        "start": "0x08008000",
+        "size": "0x800"
+    },
+    {
+        "name": "param_bak",
+        "start": "0x08008800",
+        "size": "0x800"
+    },
+    {
+        "name": "app",
+        "start": "0x08009000",
+        "size": "0x1b800"
+    },
+    {
+        "name": "app_bak",
+        "start": "0x08024800",
+        "size": "0x1b800"
+    }
+]

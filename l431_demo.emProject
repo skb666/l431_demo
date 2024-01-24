@@ -1,0 +1,263 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="l431_demo" version="2" target="21">
+  <configuration
+    Name="Common"
+    arm_compiler_variant="gcc"
+    arm_target_interface_type="SWD"
+    debug_target_connection="J-Link"
+    gcc_c_language_standard="gnu11"
+    gcc_cplusplus_language_standard="gnu++14"
+    gcc_optimization_level="Level 2 for size"
+    speed="10000"
+    target_interface_type="SWD" />
+  <configuration
+    Name="Debug"
+    c_preprocessor_definitions="DEBUG"
+    gcc_debugging_level="Level 3" />
+  <configuration
+    Name="Release"
+    c_preprocessor_definitions="NDEBUG"
+    gcc_debugging_level="Level 2" />
+  <project Name="l431_app">
+    <configuration
+      LIBRARY_IO_TYPE="RTT"
+      Name="Common"
+      Platform="ARM"
+      Target="STM32L431RCTx"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_endian="Little"
+      arm_fp_abi="Hard"
+      arm_fpu_type="FPv4-SP-D16"
+      arm_linker_heap_size="1024"
+      arm_linker_process_stack_size="0"
+      arm_linker_stack_size="2048"
+      arm_linker_variant="SEGGER"
+      arm_simulator_memory_simulation_parameter="ROM;0x08000000;0x00040000;RAM;0x10000000;0x00004000;RAM;0x20000000;0x0000C000"
+      arm_target_device_name="STM32L431RC"
+      arm_target_interface_type="SWD"
+      c_preprocessor_definitions="ARM_MATH_CM4;STM32L431xx;__STM32L431_SUBFAMILY;__STM32L4XX_FAMILY;USE_FULL_LL_DRIVER;USE_HAL_DRIVER"
+      c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/KEY/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc"
+      debug_register_definition_file="$(ProjectDir)/STM32L4x1_Registers.xml"
+      debug_stack_pointer_start="__stack_end__"
+      debug_start_from_entry_point_symbol="Yes"
+      debug_target_connection="J-Link"
+      gcc_entry_point="Reset_Handler"
+      link_linker_script_file="$(ProjectDir)/STM32L4xx_Flash.icf"
+      linker_memory_map_file="$(ProjectDir)/STM32L431RCTx_MemoryMap.xml"
+      linker_output_format="bin"
+      linker_printf_fp_enabled="Double"
+      linker_printf_width_precision_supported="Yes"
+      macros="DeviceHeaderFile=$(PackagesDir)/STM32L4xx/Device/Include/stm32l4xx.h;DeviceSystemFile=$(PackagesDir)/STM32L4xx/Device/Source/system_stm32l4xx.c;DeviceVectorsFile=$(PackagesDir)/STM32L4xx/Source/stm32l431xx_Vectors.s;DeviceFamily=STM32L4xx;DeviceSubFamily=STM32L431;Target=STM32L431RCTx"
+      project_directory="app/emStudio"
+      project_type="Executable"
+      target_reset_script="Reset();" />
+    <folder Name="Core">
+      <file file_name="../Core/Src/common.c" />
+      <file file_name="../Core/Src/crc.c" />
+      <file file_name="../Core/Src/dma.c" />
+      <file file_name="../Core/Src/gpio.c" />
+      <file file_name="../Core/Src/iwdg.c" />
+      <file file_name="../Core/Src/main.c" />
+      <file file_name="../Core/Src/quadspi.c" />
+      <file file_name="../Core/Src/stm32l4xx_hal_msp.c" />
+      <file file_name="../Core/Src/stm32l4xx_it.c" />
+      <file file_name="../Core/Src/system_stm32l4xx.c" />
+      <file file_name="../Core/Src/usart.c" />
+    </folder>
+    <folder Name="Drivers">
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_crc.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_crc_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_exti.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ramfunc.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_qspi.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_dma.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_exti.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_gpio.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_rcc.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_usart.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_utils.c" />
+    </folder>
+    <folder Name="Script Files">
+      <file file_name="STM32L4xx/Scripts/STM32L4xx_Target.js">
+        <configuration Name="Common" file_type="Reset Script" />
+      </file>
+    </folder>
+    <folder Name="System Files">
+      <file file_name="SEGGER_THUMB_Startup.s" />
+      <file file_name="STM32L4xx/Source/stm32l431xx_Vectors.s">
+        <configuration Name="Common" file_type="Assembly" />
+      </file>
+      <file file_name="STM32L4xx/Source/STM32L4xx_Startup.s" />
+    </folder>
+    <folder Name="User">
+      <folder Name="FLASH">
+        <file file_name="../User/FLASH/src/onchip_flash.c" />
+      </folder>
+      <folder Name="KEY">
+        <file file_name="../User/KEY/src/combo_key.c" />
+        <file file_name="../User/KEY/src/key.c" />
+      </folder>
+      <folder Name="libcrc">
+        <folder Name="crc32_mpeg2">
+          <file file_name="../User/libcrc/crc32_mpeg2/crc32_mpeg2.c" />
+        </folder>
+      </folder>
+      <folder Name="other">
+        <file file_name="../User/other/src/device.c" />
+        <file file_name="../User/other/src/param.c" />
+        <file file_name="../User/other/src/update.c" />
+      </folder>
+      <folder Name="RING_FIFO">
+        <file file_name="../User/RING_FIFO/src/ring_fifo.c" />
+      </folder>
+      <folder Name="task_event">
+        <folder Name="app">
+          <file file_name="../User/task_event/app/src/task_main.c" />
+        </folder>
+        <folder Name="core">
+          <file file_name="../User/task_event/core/src/event.c" />
+          <file file_name="../User/task_event/core/src/task.c" />
+          <file file_name="../User/task_event/core/src/timer.c" />
+        </folder>
+        <folder Name="user">
+          <file file_name="../User/task_event/user/src/task_user.c" />
+          <file file_name="../User/task_event/user/src/timer_user.c" />
+        </folder>
+      </folder>
+    </folder>
+  </project>
+  <project Name="l431_bld">
+    <configuration
+      LIBRARY_IO_TYPE="RTT"
+      Name="Common"
+      Platform="ARM"
+      Target="STM32L431RCTx"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_endian="Little"
+      arm_fp_abi="Hard"
+      arm_fpu_type="FPv4-SP-D16"
+      arm_linker_heap_size="1024"
+      arm_linker_process_stack_size="0"
+      arm_linker_stack_size="2048"
+      arm_linker_variant="SEGGER"
+      arm_simulator_memory_simulation_parameter="ROM;0x08000000;0x00040000;RAM;0x10000000;0x00004000;RAM;0x20000000;0x0000C000"
+      arm_target_device_name="STM32L431RC"
+      arm_target_interface_type="SWD"
+      c_preprocessor_definitions="ARM_MATH_CM4;STM32L431xx;__STM32L431_SUBFAMILY;__STM32L4XX_FAMILY;USE_FULL_LL_DRIVER;USE_HAL_DRIVER"
+      c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc"
+      debug_register_definition_file="$(ProjectDir)/STM32L4x1_Registers.xml"
+      debug_stack_pointer_start="__stack_end__"
+      debug_start_from_entry_point_symbol="Yes"
+      debug_target_connection="J-Link"
+      gcc_entry_point="Reset_Handler"
+      link_linker_script_file="$(ProjectDir)/STM32L4xx_Flash.icf"
+      linker_memory_map_file="$(ProjectDir)/STM32L431RCTx_MemoryMap.xml"
+      linker_output_format="bin"
+      linker_printf_fp_enabled="Double"
+      linker_printf_width_precision_supported="Yes"
+      macros="DeviceHeaderFile=$(PackagesDir)/STM32L4xx/Device/Include/stm32l4xx.h;DeviceSystemFile=$(PackagesDir)/STM32L4xx/Device/Source/system_stm32l4xx.c;DeviceVectorsFile=$(PackagesDir)/STM32L4xx/Source/stm32l431xx_Vectors.s;DeviceFamily=STM32L4xx;DeviceSubFamily=STM32L431;Target=STM32L431RCTx"
+      project_directory="bld/emStudio"
+      project_type="Executable"
+      target_reset_script="Reset();" />
+    <folder Name="Core">
+      <file file_name="../Core/Src/common.c" />
+      <file file_name="../Core/Src/crc.c" />
+      <file file_name="../Core/Src/dma.c" />
+      <file file_name="../Core/Src/gpio.c" />
+      <file file_name="../Core/Src/iwdg.c" />
+      <file file_name="../Core/Src/main.c" />
+      <file file_name="../Core/Src/stm32l4xx_hal_msp.c" />
+      <file file_name="../Core/Src/stm32l4xx_it.c" />
+      <file file_name="../Core/Src/system_stm32l4xx.c" />
+      <file file_name="../Core/Src/usart.c" />
+    </folder>
+    <folder Name="Drivers">
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_crc.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_crc_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_exti.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ramfunc.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_dma.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_exti.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_gpio.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_rcc.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_usart.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_utils.c" />
+    </folder>
+    <folder Name="Script Files">
+      <file file_name="STM32L4xx/Scripts/STM32L4xx_Target.js">
+        <configuration Name="Common" file_type="Reset Script" />
+      </file>
+    </folder>
+    <folder Name="System Files">
+      <file file_name="SEGGER_THUMB_Startup.s" />
+      <file file_name="STM32L4xx/Source/stm32l431xx_Vectors.s">
+        <configuration Name="Common" file_type="Assembly" />
+      </file>
+      <file file_name="STM32L4xx/Source/STM32L4xx_Startup.s" />
+    </folder>
+    <folder Name="User">
+      <folder Name="FLASH">
+        <file file_name="../User/FLASH/src/onchip_flash.c" />
+      </folder>
+      <folder Name="libcrc">
+        <folder Name="crc32_mpeg2">
+          <file file_name="../User/libcrc/crc32_mpeg2/crc32_mpeg2.c" />
+        </folder>
+      </folder>
+      <folder Name="other">
+        <file file_name="../User/other/src/device.c" />
+        <file file_name="../User/other/src/param.c" />
+        <file file_name="../User/other/src/update.c" />
+      </folder>
+      <folder Name="RING_FIFO">
+        <file file_name="../User/RING_FIFO/src/ring_fifo.c" />
+      </folder>
+      <folder Name="task_event">
+        <folder Name="app">
+          <file file_name="../User/task_event/app/src/task_main.c" />
+        </folder>
+        <folder Name="core">
+          <file file_name="../User/task_event/core/src/event.c" />
+          <file file_name="../User/task_event/core/src/task.c" />
+          <file file_name="../User/task_event/core/src/timer.c" />
+        </folder>
+        <folder Name="user">
+          <file file_name="../User/task_event/user/src/task_user.c" />
+          <file file_name="../User/task_event/user/src/timer_user.c" />
+        </folder>
+      </folder>
+    </folder>
+  </project>
+</solution>
