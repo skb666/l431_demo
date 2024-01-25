@@ -33,17 +33,17 @@ file(GLOB_RECURSE SOURCE_FILES
 MESSAGE(STATUS "SOURCE_FILES: " ${SOURCE_FILES})
 
 # 目标所需的源文件
-add_executable(l431_app.elf ${SOURCE_FILES} ${ASM_SOURCES})
+add_executable(${PROJECT_NAME}.elf ${SOURCE_FILES} ${ASM_SOURCES})
 
 # 目标所需宏定义
-target_compile_definitions(l431_app.elf PUBLIC
+target_compile_definitions(${PROJECT_NAME}.elf PUBLIC
   USE_FULL_LL_DRIVER
   USE_HAL_DRIVER
   STM32L431xx
 )
 
 # 目标所需的头文件路径
-target_include_directories(l431_app.elf PUBLIC
+target_include_directories(${PROJECT_NAME}.elf PUBLIC
   "Core/Inc"
   "Drivers/STM32L4xx_HAL_Driver/Inc"
   "Drivers/STM32L4xx_HAL_Driver/Inc/Legacy"
@@ -59,10 +59,10 @@ target_include_directories(l431_app.elf PUBLIC
 )
 
 # 目标所需链接库
-target_link_libraries(l431_app.elf -lc -lm -lnosys)
+target_link_libraries(${PROJECT_NAME}.elf -lc -lm -lnosys)
 
 # 目标所需链接选项
-target_link_options(l431_app.elf PUBLIC
+target_link_options(${PROJECT_NAME}.elf PUBLIC
   -specs=nano.specs
   -T${LDSCRIPT}
   -Wl,-Map=${MAP_FILE},--cref
@@ -71,9 +71,10 @@ target_link_options(l431_app.elf PUBLIC
 
 # 目标编译后自定义指令
 add_custom_command(
-  TARGET l431_app.elf POST_BUILD
+  TARGET ${PROJECT_NAME}.elf POST_BUILD
   COMMAND pwd
-  COMMAND ${TOOLCHAINS_PATH}${TOOLCHAINS_PREFIX}objcopy -O binary -S l431_app.elf l431_app.bin
+  COMMAND ${TOOLCHAINS_PATH}${TOOLCHAINS_PREFIX}objcopy -O binary -S ${PROJECT_NAME}.elf ${PROJECT_NAME}.bin
+  COMMAND ${TOOLCHAINS_PATH}${TOOLCHAINS_PREFIX}size ${PROJECT_NAME}.elf
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/build
 )
 
