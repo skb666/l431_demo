@@ -51,17 +51,17 @@ typedef struct {
 } PKG_HEAD;
 
 typedef struct {
-  uint32_t pkg_crc;   // 升级数据 CRC
-  uint16_t pkg_num;   // 当前包号
-  uint16_t data_len;  // 携带的数据长度
-  uint8_t data[];     // 升级数据
+  uint32_t pkg_crc;                       // 升级数据 CRC
+  uint16_t pkg_num;                       // 当前包号
+  uint16_t data_len;                      // 携带的数据长度
+  uint8_t data[UPDATE_PACKAGE_MAX_SIZE];  // 升级数据
 } PKG_DATA;
 
 typedef struct {
   uint16_t type;
   union {
-    PKG_HEAD *head;
-    PKG_DATA *data;
+    PKG_HEAD head;
+    PKG_DATA data;
   };
 } UPDATE_PKG;
 

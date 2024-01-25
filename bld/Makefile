@@ -22,7 +22,7 @@ TARGET = l431_bld
 # debug build?
 DEBUG = 0
 # optimization
-OPT = -std=gnu17 -Os
+OPT = -std=gnu11 -Os
 
 
 #######################################

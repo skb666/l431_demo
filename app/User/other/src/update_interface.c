@@ -5,11 +5,9 @@
 #include "device.h"
 #include "main.h"
 #include "param.h"
-#include "ring_fifo.h"
 #include "update.h"
 
 extern UPDATE_PKG g_update_pkg;
-ring_define_static(uint8_t, update_data_buf, (sizeof(uint16_t) + sizeof(PKG_DATA) + UPDATE_PACKAGE_MAX_SIZE), 0);
 
 void update_status_get(frame_parse_t *frame) {
   SYS_PARAM *sys = sys_param_get();
@@ -22,6 +20,8 @@ void update_status_get(frame_parse_t *frame) {
 
 void update_frame_parse(frame_parse_t *frame) {
   SYS_PARAM *sys = sys_param_get();
+  uint8_t *frame_data;
+  uint16_t frame_length;
 
   if (sys->ctrl.update.need_process) {
     return;
@@ -31,14 +31,14 @@ void update_frame_parse(frame_parse_t *frame) {
     return;
   }
 
-  /* 获取升级包数据 */
-  disable_global_irq();
-  ring_reset(&update_data_buf);
-  ring_push_mult(&update_data_buf, frame->data, frame->length);
-  enable_global_irq();
+  /* 获取升级包信息 */
+  frame_data = frame->data;
+  frame_length = frame->length;
 
   /* 获取升级包类型 */
-  ring_pop_mult(&update_data_buf, &g_update_pkg.type, sizeof(g_update_pkg.type));
+  memcpy(&g_update_pkg.type, frame_data, sizeof(g_update_pkg.type));
+  frame_data += sizeof(g_update_pkg.type);
+  frame_length -= sizeof(g_update_pkg.type);
   if (frame->byte_order) {
     change_byte_order(&g_update_pkg.type, sizeof(g_update_pkg.type));
   }
@@ -46,29 +46,29 @@ void update_frame_parse(frame_parse_t *frame) {
   switch (g_update_pkg.type) {
     case PKG_TYPE_INIT:
     case PKG_TYPE_FINISH: {
-      g_update_pkg.head = NULL;
+      memset(&g_update_pkg.data, 0, sizeof(PKG_DATA));
     } break;
     case PKG_TYPE_HEAD: {
-      if (ring_size(&update_data_buf) < sizeof(PKG_HEAD)) {
+      if (frame_length < sizeof(PKG_HEAD)) {
         return;
       }
-      g_update_pkg.head = (PKG_HEAD *)ring_peek(&update_data_buf);
+      memcpy(&g_update_pkg.head, frame_data, frame_length);
       if (frame->byte_order) {
-        change_byte_order(&g_update_pkg.head->file_crc, sizeof(g_update_pkg.head->file_crc));
-        change_byte_order(&g_update_pkg.head->file_size_real, sizeof(g_update_pkg.head->file_size_real));
-        change_byte_order(&g_update_pkg.head->data_size_one, sizeof(g_update_pkg.head->data_size_one));
-        change_byte_order(&g_update_pkg.head->pkg_num_total, sizeof(g_update_pkg.head->pkg_num_total));
+        change_byte_order(&g_update_pkg.head.file_crc, sizeof(g_update_pkg.head.file_crc));
+        change_byte_order(&g_update_pkg.head.file_size_real, sizeof(g_update_pkg.head.file_size_real));
+        change_byte_order(&g_update_pkg.head.data_size_one, sizeof(g_update_pkg.head.data_size_one));
+        change_byte_order(&g_update_pkg.head.pkg_num_total, sizeof(g_update_pkg.head.pkg_num_total));
       }
     } break;
     case PKG_TYPE_DATA: {
-      if (ring_size(&update_data_buf) < sizeof(PKG_DATA)) {
+      if (frame_length < sizeof(PKG_DATA) - UPDATE_PACKAGE_MAX_SIZE) {
         return;
       }
-      g_update_pkg.data = (PKG_DATA *)ring_peek(&update_data_buf);
+      memcpy(&g_update_pkg.data, frame_data, frame_length);
       if (frame->byte_order) {
-        change_byte_order(&g_update_pkg.data->pkg_crc, sizeof(g_update_pkg.data->pkg_crc));
-        change_byte_order(&g_update_pkg.data->pkg_num, sizeof(g_update_pkg.data->pkg_num));
-        change_byte_order(&g_update_pkg.data->data_len, sizeof(g_update_pkg.data->data_len));
+        change_byte_order(&g_update_pkg.data.pkg_crc, sizeof(g_update_pkg.data.pkg_crc));
+        change_byte_order(&g_update_pkg.data.pkg_num, sizeof(g_update_pkg.data.pkg_num));
+        change_byte_order(&g_update_pkg.data.data_len, sizeof(g_update_pkg.data.data_len));
       }
     } break;
     default: {

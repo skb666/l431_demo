@@ -111,15 +111,13 @@ if __name__ == "__main__":
             print(f"pkg_num: {pkg_num_send:02d}, pkg_crc: 0x{pkg_crc:08x}")
             sercomm.write_raw(packed)
             time.sleep(1)
-            while True:
-                (errno, running, pkg_num) = get_update_status()
-                print(f"status: 0x{errno:04x}, 0x{running:04x}, 0x{pkg_num:04x}")
-                time.sleep(0.1)
-                if pkg_num == pkg_num_send:
-                    crc32_mpeg2_file.accumulate(update_data)
-                    pkg_num_send += 1
-                    pkg_data_seek += data_len
-                    break
+            (errno, running, pkg_num) = get_update_status()
+            print(f"status: 0x{errno:04x}, 0x{running:04x}, 0x{pkg_num:04x}")
+            time.sleep(0.1)
+            if pkg_num == pkg_num_send:
+                crc32_mpeg2_file.accumulate(update_data)
+                pkg_num_send += 1
+                pkg_data_seek += data_len
         print(f"file_crc: 0x{crc32_mpeg2_file.get():08x}")
         if file_size_real != pkg_data_seek or file_crc != crc32_mpeg2_file.get():
             return False

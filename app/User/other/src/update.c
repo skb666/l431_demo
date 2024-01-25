@@ -9,7 +9,6 @@
 #include "main.h"
 #include "onchip_flash.h"
 #include "param.h"
-#include "ring_fifo.h"
 
 typedef enum {
   UPDATE_WAITTING = 0,
@@ -398,10 +397,10 @@ void update_pkg_process(void) {
         } break;
         case PKG_TYPE_HEAD: {
           sys->ctrl.update.status = 0x1000;
-          memcpy(&s_update_info.file_crc, &g_update_pkg.head->file_crc, sizeof(s_update_info.file_crc));
-          memcpy(&s_update_info.file_size_real, &g_update_pkg.head->file_size_real, sizeof(s_update_info.file_size_real));
-          memcpy(&s_update_info.data_size_one, &g_update_pkg.head->data_size_one, sizeof(s_update_info.data_size_one));
-          memcpy(&s_update_info.pkg_num_total, &g_update_pkg.head->pkg_num_total, sizeof(s_update_info.pkg_num_total));
+          memcpy(&s_update_info.file_crc, &g_update_pkg.head.file_crc, sizeof(s_update_info.file_crc));
+          memcpy(&s_update_info.file_size_real, &g_update_pkg.head.file_size_real, sizeof(s_update_info.file_size_real));
+          memcpy(&s_update_info.data_size_one, &g_update_pkg.head.data_size_one, sizeof(s_update_info.data_size_one));
+          memcpy(&s_update_info.pkg_num_total, &g_update_pkg.head.pkg_num_total, sizeof(s_update_info.pkg_num_total));
           /* 检查升级包数量 */
           if (s_update_info.pkg_num_total >= 0xFFE) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
@@ -448,23 +447,23 @@ void update_pkg_process(void) {
           status.pkg_num = s_update_info.process_num;
           memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
           /* 检查升级包号 */
-          if ((g_update_pkg.data->pkg_num <= s_update_info.pkg_num_total) && (g_update_pkg.data->pkg_num != s_update_info.process_num + 1)) {
+          if ((g_update_pkg.data.pkg_num <= s_update_info.pkg_num_total) && (g_update_pkg.data.pkg_num != s_update_info.process_num + 1)) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_PKG_NUM;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
             break;
           }
           /* 检查数据长度 */
-          if ((g_update_pkg.data->data_len > s_update_info.data_size_one) ||
-              ((g_update_pkg.data->data_len != s_update_info.data_size_one) && (g_update_pkg.data->pkg_num < s_update_info.pkg_num_total))) {
+          if ((g_update_pkg.data.data_len > s_update_info.data_size_one) ||
+              ((g_update_pkg.data.data_len != s_update_info.data_size_one) && (g_update_pkg.data.pkg_num < s_update_info.pkg_num_total))) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_DATA_SIZE;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
             break;
           }
           /* 计算数据 CRC */
-          pkg_crc = HAL_CRC_Calculate(&hcrc, (uint32_t *)g_update_pkg.data->data, g_update_pkg.data->data_len);
-          if (pkg_crc != g_update_pkg.data->pkg_crc) {
+          pkg_crc = HAL_CRC_Calculate(&hcrc, (uint32_t *)g_update_pkg.data.data, g_update_pkg.data.data_len);
+          if (pkg_crc != g_update_pkg.data.pkg_crc) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_CHECK_CRC;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
@@ -473,8 +472,8 @@ void update_pkg_process(void) {
           /* 向 Flash 写入数据 */
           disable_global_irq();
           err = STMFLASH_Write((ADDR_BASE_APP_BAK + s_update_info.recv_len),
-              (uint64_t *)g_update_pkg.data->data,
-              ((g_update_pkg.data->data_len >> 3) + !!(g_update_pkg.data->data_len % 8)));
+              (uint64_t *)g_update_pkg.data.data,
+              ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
           enable_global_irq();
           if (err) {
             /* 理论上不应该发生 */
@@ -486,8 +485,8 @@ void update_pkg_process(void) {
             break;
           }
           /* 更新升级信息 */
-          s_update_info.recv_len += g_update_pkg.data->data_len;
-          s_update_info.recv_crc = CRC_OPT(crc32_mpeg2, accum)(&s_update_info.crc, g_update_pkg.data->data, g_update_pkg.data->data_len);
+          s_update_info.recv_len += g_update_pkg.data.data_len;
+          s_update_info.recv_crc = CRC_OPT(crc32_mpeg2, accum)(&s_update_info.crc, g_update_pkg.data.data, g_update_pkg.data.data_len);
           /* 数据包接收成功 */
           s_update_info.process_num += 1;
           memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
