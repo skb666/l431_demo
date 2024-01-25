@@ -89,7 +89,7 @@ typedef struct {
   uint16_t data_size_one;   // 单次传输的升级数据大小
   uint16_t pkg_num_total;   // 升级包数量
   uint16_t process_num;     // 已处理包号
-  uint16_t recv_len;        // 已接收数据长度
+  uint32_t recv_len;        // 已接收数据长度
   uint32_t recv_crc;        // 已接收数据的 CRC
 } UPDATE_INFO;
 
