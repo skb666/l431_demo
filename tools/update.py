@@ -50,9 +50,10 @@ if __name__ == "__main__":
     sercomm.used_port_info()
 
     frame_head = b'\x55\xaa'
-    frame_type_update_data = b'\x01'
-    frame_type_update_status = b'\x02'
-    frame_type_reboot = b'\x03'
+    frame_type_reboot = b'\x01'
+    frame_type_boot_app = b'\x02'
+    frame_type_update_data = b'\xf1'
+    frame_type_update_status = b'\xf2'
     pkg_type_init = struct.pack('>H', 0x1000)
     pkg_type_finish = struct.pack('>H', 0x0ffe)
     pkg_type_head= struct.pack('>H', 0x0001)
@@ -134,6 +135,11 @@ if __name__ == "__main__":
         packed = frame_head + frame_type_reboot + struct.pack('>H', len(data)) + data
         sercomm.write_raw(packed)
 
+    def boot_app():
+        data = b''
+        packed = frame_head + frame_type_boot_app + struct.pack('>H', len(data)) + data
+        sercomm.write_raw(packed)
+
     print("="*50)
     packed = frame_head + struct.pack('>H', 0xfffe)[:1]
     chars = sercomm.write_raw(packed)
@@ -187,8 +193,11 @@ if __name__ == "__main__":
     else:
         print("failed")
 
+    """ 引导 APP """
+    boot_app()
+
     """ 重启设备 """
-    mcu_reboot()
+    # mcu_reboot()
 
     print("="*50)
     sr = SerialReceive(sercomm)

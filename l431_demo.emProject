@@ -8,7 +8,7 @@
     gcc_c_language_standard="gnu11"
     gcc_cplusplus_language_standard="gnu++14"
     gcc_optimization_level="Level 2 for size"
-    speed="10000"
+    speed="4000"
     target_interface_type="SWD" />
   <configuration
     Name="Debug"
@@ -122,6 +122,7 @@
         <file file_name="../User/other/src/device.c" />
         <file file_name="../User/other/src/param.c" />
         <file file_name="../User/other/src/update.c" />
+        <file file_name="../User/other/src/update_interface.c" />
       </folder>
       <folder Name="RING_FIFO">
         <file file_name="../User/RING_FIFO/src/ring_fifo.c" />
@@ -240,6 +241,7 @@
         <file file_name="../User/other/src/device.c" />
         <file file_name="../User/other/src/param.c" />
         <file file_name="../User/other/src/update.c" />
+        <file file_name="../User/other/src/update_interface.c" />
       </folder>
       <folder Name="RING_FIFO">
         <file file_name="../User/RING_FIFO/src/ring_fifo.c" />

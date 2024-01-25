@@ -22,7 +22,7 @@ TARGET = l431_app
 # debug build?
 DEBUG = 0
 # optimization
-OPT = -std=gnu11 -Os
+OPT = -std=gnu17 -Os
 
 
 #######################################
@@ -51,6 +51,7 @@ User/libcrc/crc32_mpeg2/crc32_mpeg2.c \
 User/other/src/device.c \
 User/other/src/param.c \
 User/other/src/update.c \
+User/other/src/update_interface.c \
 Core/Src/main.c \
 Core/Src/gpio.c \
 Core/Src/crc.c \

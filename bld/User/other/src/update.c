@@ -1,32 +1,15 @@
 #include "update.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "common.h"
 #include "crc.h"
 #include "crc32_mpeg2.h"
-#include "device.h"
 #include "main.h"
 #include "onchip_flash.h"
 #include "param.h"
 #include "ring_fifo.h"
-
-#define UPDATE_PACKAGE_MAX_SIZE 1024
-
-typedef enum {
-  STATUS_NONE = 0,  // APP 不存在
-  STATUS_RECV,      // APP 接收中
-  STATUS_LOAD,      // APP 载入中
-  STATUS_BOOT,      // APP 可引导
-  STATUS_NORM,      // APP 可运行
-} APP_STATUS;
-
-typedef struct {
-  uint32_t update_needed;  // 更新标记
-  uint32_t app_status;     // APP 的状态
-  uint32_t back_to_app;    // 是否允许回到 APP
-  uint32_t crc_val;        // 引导参数的 CRC 校验值
-} BOOT_PARAM;
 
 typedef enum {
   UPDATE_WAITTING = 0,
@@ -52,35 +35,6 @@ typedef struct {
   uint16_t errno : 3;
 } UPDATE_STATUS;
 
-typedef enum {
-  PKG_TYPE_INIT = 0x1000,
-  PKG_TYPE_FINISH = 0x0FFE,
-  PKG_TYPE_HEAD = 0x0001,
-  PKG_TYPE_DATA = 0x0002,
-} PKG_TYPE;
-
-typedef struct {
-  uint32_t file_crc;        // 升级文件的 CRC 值
-  uint32_t file_size_real;  // 升级文件实际大小
-  uint16_t data_size_one;   // 单次传输的升级数据大小
-  uint16_t pkg_num_total;   // 升级包数量
-} PKG_HEAD;
-
-typedef struct {
-  uint32_t pkg_crc;   // 升级数据 CRC
-  uint16_t pkg_num;   // 当前包号
-  uint16_t data_len;  // 携带的数据长度
-  uint8_t data[];     // 升级数据
-} PKG_DATA;
-
-typedef struct {
-  uint16_t type;
-  union {
-    PKG_HEAD *head;
-    PKG_DATA *data;
-  };
-} UPDATE_PKG;
-
 typedef struct {
   CRC32_MPEG2 crc;          // crc 计算器
   BOOT_PARAM boot_param;    // boot 参数
@@ -98,8 +52,7 @@ __IO uint32_t MspAddress;
 __IO uint32_t JumpAddress;
 __IO pFunction JumpToApplication;
 
-ring_define_static(uint8_t, update_data_buf, (sizeof(uint16_t) + sizeof(PKG_DATA) + UPDATE_PACKAGE_MAX_SIZE), 0);
-static UPDATE_PKG s_update_pkg;
+UPDATE_PKG g_update_pkg;
 static UPDATE_INFO s_update_info;
 
 static BOOT_PARAM boot_param_default = {
@@ -154,7 +107,7 @@ static int8_t boot_param_save(uint32_t addr, BOOT_PARAM *param) {
   return 0;
 }
 
-static int8_t boot_param_update(BOOT_PARAM *param) {
+int8_t boot_param_update(BOOT_PARAM *param) {
   int8_t err = 0;
 
   err = boot_param_save(ADDR_BASE_PARAM, param);
@@ -170,7 +123,7 @@ static int8_t boot_param_update(BOOT_PARAM *param) {
   return 0;
 }
 
-static void boot_param_get(BOOT_PARAM *pdata) {
+void boot_param_get(BOOT_PARAM *pdata) {
   (void)STMFLASH_Read(ADDR_BASE_PARAM, (uint64_t *)pdata, boot_param_size64);
 }
 
@@ -385,77 +338,6 @@ void boot_param_check(void) {
   }
 }
 
-void update_status_get(frame_parse_t *frame) {
-  SYS_PARAM *sys = sys_param_get();
-  uint16_t update_status = sys->ctrl.update.status;
-  if (frame->byte_order) {
-    change_byte_order(&update_status, sizeof(update_status));
-  }
-  uart_puts(DEV_USART1, (uint8_t *)&update_status, sizeof(update_status));
-}
-
-void update_frame_parse(frame_parse_t *frame) {
-  SYS_PARAM *sys = sys_param_get();
-
-  if (sys->ctrl.update.need_process) {
-    return;
-  }
-
-  if (frame->length < 2) {
-    return;
-  }
-
-  /* 获取升级包数据 */
-  disable_global_irq();
-  ring_reset(&update_data_buf);
-  ring_push_mult(&update_data_buf, frame->data, frame->length);
-  enable_global_irq();
-
-  /* 获取升级包类型 */
-  ring_pop_mult(&update_data_buf, &s_update_pkg.type, sizeof(s_update_pkg.type));
-  if (frame->byte_order) {
-    change_byte_order(&s_update_pkg.type, sizeof(s_update_pkg.type));
-  }
-
-  switch (s_update_pkg.type) {
-    case PKG_TYPE_INIT:
-    case PKG_TYPE_FINISH: {
-      s_update_pkg.head = NULL;
-    } break;
-    case PKG_TYPE_HEAD: {
-      if (ring_size(&update_data_buf) < sizeof(PKG_HEAD)) {
-        return;
-      }
-      s_update_pkg.head = (PKG_HEAD *)ring_peek(&update_data_buf);
-      if (frame->byte_order) {
-        change_byte_order(&s_update_pkg.head->file_crc, sizeof(s_update_pkg.head->file_crc));
-        change_byte_order(&s_update_pkg.head->file_size_real, sizeof(s_update_pkg.head->file_size_real));
-        change_byte_order(&s_update_pkg.head->data_size_one, sizeof(s_update_pkg.head->data_size_one));
-        change_byte_order(&s_update_pkg.head->pkg_num_total, sizeof(s_update_pkg.head->pkg_num_total));
-      }
-    } break;
-    case PKG_TYPE_DATA: {
-      if (ring_size(&update_data_buf) < sizeof(PKG_DATA)) {
-        return;
-      }
-      s_update_pkg.data = (PKG_DATA *)ring_peek(&update_data_buf);
-      if (frame->byte_order) {
-        change_byte_order(&s_update_pkg.data->pkg_crc, sizeof(s_update_pkg.data->pkg_crc));
-        change_byte_order(&s_update_pkg.data->pkg_num, sizeof(s_update_pkg.data->pkg_num));
-        change_byte_order(&s_update_pkg.data->data_len, sizeof(s_update_pkg.data->data_len));
-      }
-    } break;
-    default: {
-      return;
-    } break;
-  }
-
-  /* 升级包准备好后置位 */
-  disable_global_irq();
-  sys->ctrl.update.need_process = 1;
-  enable_global_irq();
-}
-
 static void update_init(SYS_PARAM *sys) {
   int8_t err = 0;
   UPDATE_STATUS status;
@@ -489,6 +371,7 @@ void update_pkg_process(void) {
   uint32_t pkg_crc;
   int8_t err = 0;
   UPDATE_STATUS status;
+  uint32_t msp_addr;
 
   if (!sys->ctrl.update.need_process) {
     return;
@@ -496,7 +379,7 @@ void update_pkg_process(void) {
 
   switch (sys->ctrl.update.stage) {
     case UPDATE_WAITTING: {
-      switch (s_update_pkg.type) {
+      switch (g_update_pkg.type) {
         case PKG_TYPE_INIT: {
           update_init(sys);
         } break;
@@ -509,16 +392,16 @@ void update_pkg_process(void) {
       }
     } break;
     case UPDATE_BEGIN: {
-      switch (s_update_pkg.type) {
+      switch (g_update_pkg.type) {
         case PKG_TYPE_INIT: {
           update_init(sys);
         } break;
         case PKG_TYPE_HEAD: {
           sys->ctrl.update.status = 0x1000;
-          memcpy(&s_update_info.file_crc, &s_update_pkg.head->file_crc, sizeof(s_update_info.file_crc));
-          memcpy(&s_update_info.file_size_real, &s_update_pkg.head->file_size_real, sizeof(s_update_info.file_size_real));
-          memcpy(&s_update_info.data_size_one, &s_update_pkg.head->data_size_one, sizeof(s_update_info.data_size_one));
-          memcpy(&s_update_info.pkg_num_total, &s_update_pkg.head->pkg_num_total, sizeof(s_update_info.pkg_num_total));
+          memcpy(&s_update_info.file_crc, &g_update_pkg.head->file_crc, sizeof(s_update_info.file_crc));
+          memcpy(&s_update_info.file_size_real, &g_update_pkg.head->file_size_real, sizeof(s_update_info.file_size_real));
+          memcpy(&s_update_info.data_size_one, &g_update_pkg.head->data_size_one, sizeof(s_update_info.data_size_one));
+          memcpy(&s_update_info.pkg_num_total, &g_update_pkg.head->pkg_num_total, sizeof(s_update_info.pkg_num_total));
           /* 检查升级包数量 */
           if (s_update_info.pkg_num_total >= 0xFFE) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
@@ -555,7 +438,7 @@ void update_pkg_process(void) {
       }
     } break;
     case UPDATE_TRANSMIT: {
-      switch (s_update_pkg.type) {
+      switch (g_update_pkg.type) {
         case PKG_TYPE_INIT: {
           update_init(sys);
         } break;
@@ -565,23 +448,23 @@ void update_pkg_process(void) {
           status.pkg_num = s_update_info.process_num;
           memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
           /* 检查升级包号 */
-          if ((s_update_pkg.data->pkg_num <= s_update_info.pkg_num_total) && (s_update_pkg.data->pkg_num != s_update_info.process_num + 1)) {
+          if ((g_update_pkg.data->pkg_num <= s_update_info.pkg_num_total) && (g_update_pkg.data->pkg_num != s_update_info.process_num + 1)) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_PKG_NUM;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
             break;
           }
           /* 检查数据长度 */
-          if ((s_update_pkg.data->data_len > s_update_info.data_size_one) ||
-              ((s_update_pkg.data->data_len != s_update_info.data_size_one) && (s_update_pkg.data->pkg_num < s_update_info.pkg_num_total))) {
+          if ((g_update_pkg.data->data_len > s_update_info.data_size_one) ||
+              ((g_update_pkg.data->data_len != s_update_info.data_size_one) && (g_update_pkg.data->pkg_num < s_update_info.pkg_num_total))) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_DATA_SIZE;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
             break;
           }
           /* 计算数据 CRC */
-          pkg_crc = HAL_CRC_Calculate(&hcrc, (uint32_t *)s_update_pkg.data->data, s_update_pkg.data->data_len);
-          if (pkg_crc != s_update_pkg.data->pkg_crc) {
+          pkg_crc = HAL_CRC_Calculate(&hcrc, (uint32_t *)g_update_pkg.data->data, g_update_pkg.data->data_len);
+          if (pkg_crc != g_update_pkg.data->pkg_crc) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_CHECK_CRC;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
@@ -590,8 +473,8 @@ void update_pkg_process(void) {
           /* 向 Flash 写入数据 */
           disable_global_irq();
           err = STMFLASH_Write((ADDR_BASE_APP_BAK + s_update_info.recv_len),
-              (uint64_t *)s_update_pkg.data->data,
-              ((s_update_pkg.data->data_len >> 3) + !!(s_update_pkg.data->data_len % 8)));
+              (uint64_t *)g_update_pkg.data->data,
+              ((g_update_pkg.data->data_len >> 3) + !!(g_update_pkg.data->data_len % 8)));
           enable_global_irq();
           if (err) {
             /* 理论上不应该发生 */
@@ -603,8 +486,8 @@ void update_pkg_process(void) {
             break;
           }
           /* 更新升级信息 */
-          s_update_info.recv_len += s_update_pkg.data->data_len;
-          s_update_info.recv_crc = CRC_OPT(crc32_mpeg2, accum)(&s_update_info.crc, s_update_pkg.data->data, s_update_pkg.data->data_len);
+          s_update_info.recv_len += g_update_pkg.data->data_len;
+          s_update_info.recv_crc = CRC_OPT(crc32_mpeg2, accum)(&s_update_info.crc, g_update_pkg.data->data, g_update_pkg.data->data_len);
           /* 数据包接收成功 */
           s_update_info.process_num += 1;
           memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
@@ -625,6 +508,14 @@ void update_pkg_process(void) {
           if (s_update_info.file_crc != CRC_OPT(crc32_mpeg2, get)(&s_update_info.crc)) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_CHECK_CRC;
+            memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+            break;
+          }
+          /* 校验升级包正确性 */
+          msp_addr = STMFLASH_ReadWord(ADDR_BASE_APP_BAK);
+          if ((msp_addr & 0xFFFFC000) != 0x10000000 && (msp_addr & 0xFFFF0000) != 0x20000000) {
+            memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+            status.errno = ERRNO_UNKNOW;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
             break;
           }
@@ -675,7 +566,7 @@ void update_pkg_process(void) {
       }
     } break;
     case UPDATE_FINISH: {
-      switch (s_update_pkg.type) {
+      switch (g_update_pkg.type) {
         case PKG_TYPE_INIT: {
           /* 升级失败，等待复位 */
           memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));

@@ -6,13 +6,16 @@
 #include "timer.h"
 
 typedef enum {
-  FRAME_TYPE_DEBUG = 0,
-  FRAME_TYPE_UPDATE_DATA = 1,
-  FRAME_TYPE_UPDATE_STATUS = 2,
-  FRAME_TYPE_REBOOT = 3,
+  FRAME_TYPE_DEBUG = 0x00,
+  FRAME_TYPE_REBOOT = 0x01,
+  FRAME_TYPE_BOOT_APP = 0x02,
+  FRAME_TYPE_UPDATE_DATA = 0xf1,
+  FRAME_TYPE_UPDATE_STATUS = 0xf2,
   FRAME_TYPE_MAX,
 } FRAME_TYPE;
 
+extern void system_ctrl_reboot(frame_parse_t *frame);
+extern void system_ctrl_boot_app(frame_parse_t *frame);
 extern void update_status_get(frame_parse_t *frame);
 extern void update_frame_parse(frame_parse_t *frame);
 extern void update_pkg_process(void);
@@ -63,16 +66,12 @@ static void print_frame_usart1(frame_parse_t *frame) {
   uart_puts(DEV_USART1, frame->data, frame->length);
 }
 
-static void system_ctrl_reboot(frame_parse_t *frame) {
-  uart_printf(DEV_USART1, "system_ctrl_reboot\r\n");
-  NVIC_SystemReset();
-}
-
 void main_loop_init(void) {
   frame_parse_register(DEV_USART1, FRAME_TYPE_DEBUG, print_frame_usart1);
+  frame_parse_register(DEV_USART1, FRAME_TYPE_REBOOT, system_ctrl_reboot);
+  frame_parse_register(DEV_USART1, FRAME_TYPE_BOOT_APP, system_ctrl_boot_app);
   frame_parse_register(DEV_USART1, FRAME_TYPE_UPDATE_DATA, update_frame_parse);
   frame_parse_register(DEV_USART1, FRAME_TYPE_UPDATE_STATUS, update_status_get);
-  frame_parse_register(DEV_USART1, FRAME_TYPE_REBOOT, system_ctrl_reboot);
 }
 
 void main_loop_handle(TASK *task) {

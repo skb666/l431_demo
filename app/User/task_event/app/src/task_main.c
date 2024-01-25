@@ -8,10 +8,14 @@
 #include "timer.h"
 
 typedef enum {
-  FRAME_TYPE_DEBUG = 0,
-  FRAME_TYPE_REBOOT = 3,
+  FRAME_TYPE_DEBUG = 0x00,
+  FRAME_TYPE_REBOOT = 0x01,
+  FRAME_TYPE_UPDATE_START = 0xf0,
   FRAME_TYPE_MAX,
 } FRAME_TYPE;
+
+extern void system_ctrl_reboot(frame_parse_t *frame);
+extern void update_start(frame_parse_t *frame);
 
 static void task_event_process(TASK *task, void (*callback)(EVENT *)) {
   int8_t err;
@@ -174,14 +178,10 @@ static void print_frame_usart1(frame_parse_t *frame) {
   uart_puts(DEV_USART1, frame->data, frame->length);
 }
 
-static void system_ctrl_reboot(frame_parse_t *frame) {
-  uart_printf(DEV_USART1, "system_ctrl_reboot\r\n");
-  NVIC_SystemReset();
-}
-
 void main_loop_init(void) {
   frame_parse_register(DEV_USART1, FRAME_TYPE_DEBUG, print_frame_usart1);
   frame_parse_register(DEV_USART1, FRAME_TYPE_REBOOT, system_ctrl_reboot);
+  frame_parse_register(DEV_USART1, FRAME_TYPE_UPDATE_START, update_start);
 }
 
 void main_loop_handle(TASK *task) {
