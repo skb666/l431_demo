@@ -27,7 +27,7 @@ void update_frame_parse(frame_parse_t *frame) {
     return;
   }
 
-  if (frame->length < 2) {
+  if (frame->length < sizeof(g_update_pkg.type)) {
     return;
   }
 
@@ -46,12 +46,13 @@ void update_frame_parse(frame_parse_t *frame) {
   switch (g_update_pkg.type) {
     case PKG_TYPE_INIT:
     case PKG_TYPE_FINISH: {
-      memset(&g_update_pkg.data, 0, sizeof(PKG_DATA));
+      memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
     } break;
     case PKG_TYPE_HEAD: {
-      if (frame_length < sizeof(PKG_HEAD)) {
+      if (frame_length != sizeof(PKG_HEAD)) {
         return;
       }
+      memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
       memcpy(&g_update_pkg.head, frame_data, frame_length);
       if (frame->byte_order) {
         change_byte_order(&g_update_pkg.head.file_crc, sizeof(g_update_pkg.head.file_crc));
@@ -61,9 +62,10 @@ void update_frame_parse(frame_parse_t *frame) {
       }
     } break;
     case PKG_TYPE_DATA: {
-      if (frame_length < sizeof(PKG_DATA) - UPDATE_PACKAGE_MAX_SIZE) {
+      if ((frame_length < sizeof(PKG_DATA) - UPDATE_PACKAGE_MAX_SIZE) || (frame_length > sizeof(PKG_DATA))) {
         return;
       }
+      memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
       memcpy(&g_update_pkg.data, frame_data, frame_length);
       if (frame->byte_order) {
         change_byte_order(&g_update_pkg.data.pkg_crc, sizeof(g_update_pkg.data.pkg_crc));
@@ -82,20 +84,18 @@ void update_frame_parse(frame_parse_t *frame) {
   enable_global_irq();
 }
 
-void system_ctrl_reboot(frame_parse_t *frame) {
-  uart_printf(DEV_USART1, "system_ctrl_reboot\r\n");
-  NVIC_SystemReset();
-}
+void system_ctrl_frame_parse(frame_parse_t *frame) {
+  SYS_PARAM *sys = sys_param_get();
+  uint16_t value;
 
-void update_start(frame_parse_t *frame) {
-  BOOT_PARAM param;
-
-  boot_param_get(&param);
-
-  param.update_needed = 1;
-  if (boot_param_update(&param)) {
-    Error_Handler();
+  if (frame->length < sizeof(value)) {
+    return;
   }
 
-  NVIC_SystemReset();
+  memcpy(&value, frame->data, sizeof(value));
+  if (frame->byte_order) {
+    change_byte_order(&value, sizeof(value));
+  }
+
+  sys->ctrl.system = value;
 }

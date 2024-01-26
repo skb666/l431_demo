@@ -229,11 +229,15 @@ static inline __attribute__((always_inline)) void boot_to_app(uint32_t boot_addr
   JumpToApplication();
 }
 
-void boot_param_check(void) {
+void boot_param_check(uint8_t with_check) {
   BOOT_PARAM param;
 
-  if (boot_param_get_with_check(&param)) {
-    Error_Handler();
+  if (with_check) {
+    if (boot_param_get_with_check(&param)) {
+      Error_Handler();
+    }
+  } else {
+    boot_param_get(&param);
   }
 
   if (SCB->VTOR == ADDR_BASE_APP) {
@@ -418,6 +422,7 @@ void update_pkg_process(void) {
             break;
           }
           /* 更新引导参数 */
+          s_update_info.boot_param.update_needed = 1;
           s_update_info.boot_param.app_status = STATUS_RECV;
           if (boot_param_update(&s_update_info.boot_param)) {
             /* 理论上不应该发生 */
@@ -519,6 +524,7 @@ void update_pkg_process(void) {
             break;
           }
           /* 更新引导参数 */
+          s_update_info.boot_param.update_needed = 1;
           s_update_info.boot_param.back_to_app = 0;
           s_update_info.boot_param.app_status = STATUS_LOAD;
           if (boot_param_update(&s_update_info.boot_param)) {
@@ -530,6 +536,7 @@ void update_pkg_process(void) {
             sys->ctrl.update.stage = UPDATE_FINISH;
             break;
           }
+#if 0
           /* 加载 APP 到运行区 */
           if (load_app_from_backup()) {
             /* 理论上不应该发生 */
@@ -552,6 +559,7 @@ void update_pkg_process(void) {
             sys->ctrl.update.stage = UPDATE_FINISH;
             break;
           }
+#endif
           /* 升级成功 */
           memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
           status.errno = ERRNO_SUCC;

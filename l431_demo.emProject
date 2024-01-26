@@ -2,7 +2,7 @@
 <solution Name="l431_demo" version="2" target="21">
   <configuration
     Name="Common"
-    arm_compiler_variant="gcc"
+    arm_compiler_variant="SEGGER"
     arm_target_interface_type="SWD"
     debug_target_connection="J-Link"
     gcc_c_language_standard="gnu11"
@@ -37,7 +37,7 @@
       arm_target_device_name="STM32L431RC"
       arm_target_interface_type="SWD"
       c_preprocessor_definitions="ARM_MATH_CM4;STM32L431xx;__STM32L431_SUBFAMILY;__STM32L4XX_FAMILY;USE_FULL_LL_DRIVER;USE_HAL_DRIVER"
-      c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/KEY/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc"
+      c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/KEY/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc;$(ProjectDir)/../User/i2c_slave/inc"
       debug_register_definition_file="$(ProjectDir)/STM32L4x1_Registers.xml"
       debug_stack_pointer_start="__stack_end__"
       debug_start_from_entry_point_symbol="Yes"
@@ -57,6 +57,7 @@
       <file file_name="../Core/Src/crc.c" />
       <file file_name="../Core/Src/dma.c" />
       <file file_name="../Core/Src/gpio.c" />
+      <file file_name="../Core/Src/i2c.c" />
       <file file_name="../Core/Src/iwdg.c" />
       <file file_name="../Core/Src/main.c" />
       <file file_name="../Core/Src/quadspi.c" />
@@ -89,6 +90,7 @@
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_dma.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_exti.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_gpio.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_i2c.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_rcc.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_usart.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_utils.c" />
@@ -108,6 +110,11 @@
     <folder Name="User">
       <folder Name="FLASH">
         <file file_name="../User/FLASH/src/onchip_flash.c" />
+      </folder>
+      <folder Name="i2c_slave">
+        <file file_name="../User/i2c_slave/src/i2c_protocol.c" />
+        <file file_name="../User/i2c_slave/src/i2c_reg_list.c" />
+        <file file_name="../User/i2c_slave/src/i2c_slave.c" />
       </folder>
       <folder Name="KEY">
         <file file_name="../User/KEY/src/combo_key.c" />
@@ -162,7 +169,7 @@
       arm_target_device_name="STM32L431RC"
       arm_target_interface_type="SWD"
       c_preprocessor_definitions="ARM_MATH_CM4;STM32L431xx;__STM32L431_SUBFAMILY;__STM32L4XX_FAMILY;USE_FULL_LL_DRIVER;USE_HAL_DRIVER"
-      c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc"
+      c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc;$(ProjectDir)/../User/i2c_slave/inc"
       debug_register_definition_file="$(ProjectDir)/STM32L4x1_Registers.xml"
       debug_stack_pointer_start="__stack_end__"
       debug_start_from_entry_point_symbol="Yes"
@@ -182,6 +189,7 @@
       <file file_name="../Core/Src/crc.c" />
       <file file_name="../Core/Src/dma.c" />
       <file file_name="../Core/Src/gpio.c" />
+      <file file_name="../Core/Src/i2c.c" />
       <file file_name="../Core/Src/iwdg.c" />
       <file file_name="../Core/Src/main.c" />
       <file file_name="../Core/Src/stm32l4xx_hal_msp.c" />
@@ -212,6 +220,7 @@
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_dma.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_exti.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_gpio.c" />
+      <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_i2c.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_rcc.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_usart.c" />
       <file file_name="../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_utils.c" />
@@ -231,6 +240,11 @@
     <folder Name="User">
       <folder Name="FLASH">
         <file file_name="../User/FLASH/src/onchip_flash.c" />
+      </folder>
+      <folder Name="i2c_slave">
+        <file file_name="../User/i2c_slave/src/i2c_protocol.c" />
+        <file file_name="../User/i2c_slave/src/i2c_reg_list.c" />
+        <file file_name="../User/i2c_slave/src/i2c_slave.c" />
       </folder>
       <folder Name="libcrc">
         <folder Name="crc32_mpeg2">

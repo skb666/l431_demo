@@ -4,10 +4,10 @@ import json
 
 if __name__ == "__main__":
     partition_table  = "partition_table.json"
-    # bld_file = "../bld/emStudio/Output/Debug/Exe/l431_bld.bin"
-    # app_file = "../app/emStudio/Output/Debug/Exe/l431_app.bin"
-    bld_file = "../bld/build/l431_bld.bin"
-    app_file = "../app/build/l431_app.bin"
+    bld_file = "../bld/emStudio/Output/Debug/Exe/l431_bld.bin"
+    app_file = "../app/emStudio/Output/Debug/Exe/l431_app.bin"
+    # bld_file = "../bld/build/l431_bld.bin"
+    # app_file = "../app/build/l431_app.bin"
     out_file = "merge.bin"
 
     with open(partition_table, "r") as f_obj:

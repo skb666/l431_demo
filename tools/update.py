@@ -20,10 +20,10 @@ if __name__ == "__main__":
         usage()
         exit(2)
 
-    portname = "COM6"
+    portname = "COM4"
     baudrate = 115200
-    # filename = "../app/emStudio/Output/Debug/Exe/l431_app.bin"
-    filename = "../app/build/l431_app.bin"
+    filename = "../app/emStudio/Output/Debug/Exe/l431_app.bin"
+    # filename = "../app/build/l431_app.bin"
 
     for op, val in opts:
         if op in ("-d", "--device"):
@@ -50,14 +50,16 @@ if __name__ == "__main__":
     sercomm.used_port_info()
 
     frame_head = b'\x55\xaa'
-    frame_type_reboot = b'\x01'
-    frame_type_boot_app = b'\x02'
+    frame_type_system_ctrl = b'\x01'
     frame_type_update_data = b'\xf1'
     frame_type_update_status = b'\xf2'
     pkg_type_init = struct.pack('>H', 0x1000)
     pkg_type_finish = struct.pack('>H', 0x0ffe)
     pkg_type_head= struct.pack('>H', 0x0001)
     pkg_type_data = struct.pack('>H', 0x0002)
+    system_ctrl_reboot = struct.pack('>H', 0x0001)
+    system_ctrl_boot_app = struct.pack('>H', 0x0002)
+    system_ctrl_update_start = struct.pack('>H', 0x0003)
 
     def get_update_status():
         data = b''
@@ -108,11 +110,11 @@ if __name__ == "__main__":
                 pkg_crc = crc32_mpeg2_pkg(update_data)
             data = pkg_type_data + struct.pack('>IHH', pkg_crc, pkg_num_send, data_len) + update_data
             packed = frame_head + frame_type_update_data + struct.pack('>H', len(data)) + data
-            print(f"pkg_num: {pkg_num_send:02d}, pkg_crc: 0x{pkg_crc:08x}")
+            print(f"pkg_num: {pkg_num_send:03d}, pkg_crc: 0x{pkg_crc:08x}")
             sercomm.write_raw(packed)
             time.sleep(1)
             (errno, running, pkg_num) = get_update_status()
-            print(f"status: 0x{errno:04x}, 0x{running:04x}, 0x{pkg_num:04x}")
+            print(f"status: {errno}, {running}, {pkg_num:03d}\r\n")
             time.sleep(0.1)
             if pkg_num == pkg_num_send:
                 crc32_mpeg2_file.accumulate(update_data)
@@ -128,25 +130,20 @@ if __name__ == "__main__":
         packed = frame_head + frame_type_update_data + struct.pack('>H', len(data)) + data
         sercomm.write_raw(packed)
 
-    def mcu_reboot():
-        data = b''
-        packed = frame_head + frame_type_reboot + struct.pack('>H', len(data)) + data
+    def system_ctrl(ctrl_flag):
+        data = ctrl_flag
+        packed = frame_head + frame_type_system_ctrl + struct.pack('>H', len(data)) + data
         sercomm.write_raw(packed)
-
-    def boot_app():
-        data = b''
-        packed = frame_head + frame_type_boot_app + struct.pack('>H', len(data)) + data
-        sercomm.write_raw(packed)
-
+    
     print("="*50)
     packed = frame_head + struct.pack('>H', 0xfffe)[:1]
     chars = sercomm.write_raw(packed)
-    print("set to big-endian")
+    print("set to big-endian\r\n")
     time.sleep(0.1)
 
     """ 获取初始状态 """
     (errno, running, pkg_num) = get_update_status()
-    print(f"status: 0x{errno:04x}, 0x{running:04x}, 0x{pkg_num:04x}")
+    print(f"status: {errno}, {running}, 0x{pkg_num:03x}\r\n")
     time.sleep(0.1)
 
     """ 升级初始化 """
@@ -157,7 +154,7 @@ if __name__ == "__main__":
         time.sleep(1)
         (errno, running, pkg_num) = get_update_status()
         time.sleep(0.1)
-    print(f"status: 0x{errno:04x}, 0x{running:04x}, 0x{pkg_num:04x}")
+    print(f"status: {errno}, {running}, 0x{pkg_num:03x}\r\n")
     if not retry and (errno or not running or pkg_num != 0x0fff):
         print("error: update_init")
         exit()
@@ -167,7 +164,7 @@ if __name__ == "__main__":
     print(f"file_crc: 0x{file_crc:08x}\r\nfile_size_real: {file_size_real}\r\ndata_size_one: {data_size_one}\r\npkg_num_total: {pkg_num_total}")
     time.sleep(0.1)
     (errno, running, pkg_num) = get_update_status()
-    print(f"status: 0x{errno:04x}, 0x{running:04x}, 0x{pkg_num:04x}")
+    print(f"status: {errno}, {running}, 0x{pkg_num:03x}\r\n")
     time.sleep(0.1)
     if errno or not running or pkg_num != 0x0000:
         print("error: update_head")
@@ -182,20 +179,17 @@ if __name__ == "__main__":
 
     """ 结束升级 """
     update_finish()
-    time.sleep(10)
+    time.sleep(1)
     (errno, running, pkg_num) = get_update_status()
     time.sleep(0.1)
-    print(f"status: 0x{errno:04x}, 0x{running:04x}, 0x{pkg_num:04x}")
+    print(f"status: {errno}, {running}, 0x{pkg_num:03x}\r\n")
     if not errno and not running and pkg_num == 0x0ffe:
         print("success")
     else:
         print("failed")
 
-    """ 引导 APP """
-    boot_app()
-
     """ 重启设备 """
-    # mcu_reboot()
+    system_ctrl(system_ctrl_reboot)
 
     print("="*50)
     sr = SerialReceive(sercomm)

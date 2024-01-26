@@ -67,7 +67,7 @@ typedef struct {
 
 int8_t boot_param_update(BOOT_PARAM *param);
 void boot_param_get(BOOT_PARAM *pdata);
-void boot_param_check(void);
+void boot_param_check(uint8_t with_check);
 
 #ifdef __cplusplus
 }
