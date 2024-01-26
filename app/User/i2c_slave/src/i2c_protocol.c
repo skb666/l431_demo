@@ -70,7 +70,7 @@ void reg_write_cb_update_data(void) {
       memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
     } break;
     case PKG_TYPE_HEAD: {
-      if (i2c_slave_rx_size() < sizeof(PKG_HEAD)) {
+      if (i2c_slave_rx_size() != sizeof(PKG_HEAD)) {
         return;
       }
       memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
@@ -81,7 +81,7 @@ void reg_write_cb_update_data(void) {
       change_byte_order(&g_update_pkg.head.pkg_num_total, sizeof(g_update_pkg.head.pkg_num_total));
     } break;
     case PKG_TYPE_DATA: {
-      if (i2c_slave_rx_size() < sizeof(PKG_DATA) - UPDATE_PACKAGE_MAX_SIZE) {
+      if ((i2c_slave_rx_size() < sizeof(PKG_DATA) - UPDATE_PACKAGE_MAX_SIZE) || (i2c_slave_rx_size() > sizeof(PKG_DATA))) {
         return;
       }
       memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
