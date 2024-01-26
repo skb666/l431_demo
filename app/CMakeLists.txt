@@ -28,6 +28,7 @@ file(GLOB_RECURSE SOURCE_FILES
   "User/task_event/user/src/*.c"
   "User/task_event/app/src/*.c"
   "User/libcrc/crc32_mpeg2/*.c"
+  "User/i2c_slave/src/*.c"
   "User/other/src/*.c"
 )
 MESSAGE(STATUS "SOURCE_FILES: " ${SOURCE_FILES})
@@ -55,6 +56,7 @@ target_include_directories(${PROJECT_NAME}.elf PUBLIC
   "User/task_event/core/inc"
   "User/task_event/user/inc"
   "User/libcrc/crc32_mpeg2"
+  "User/i2c_slave/inc"
   "User/other/inc"
 )
 

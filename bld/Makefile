@@ -46,6 +46,9 @@ User/task_event/user/src/task_user.c \
 User/task_event/user/src/timer_user.c \
 User/task_event/app/src/task_main.c \
 User/libcrc/crc32_mpeg2/crc32_mpeg2.c \
+User/i2c_slave/src/i2c_slave.c \
+User/i2c_slave/src/i2c_reg_list.c \
+User/i2c_slave/src/i2c_protocol.c \
 User/other/src/device.c \
 User/other/src/param.c \
 User/other/src/update.c \
@@ -151,6 +154,7 @@ C_INCLUDES =  \
 -IUser/task_event/core/inc \
 -IUser/task_event/user/inc \
 -IUser/libcrc/crc32_mpeg2 \
+-IUser/i2c_slave/inc \
 -IUser/other/inc \
 -ICore/Inc \
 -IDrivers/STM32L4xx_HAL_Driver/Inc \
