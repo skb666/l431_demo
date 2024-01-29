@@ -173,6 +173,7 @@ static int8_t boot_param_get_with_check(BOOT_PARAM *pdata) {
   return 0;
 }
 
+#ifdef PROGRAM_BLD
 static int8_t load_app_from_backup(void) {
   uint64_t buf[256];
   int8_t err = 0;
@@ -199,7 +200,9 @@ static int8_t load_app_from_backup(void) {
 
   return 0;
 }
+#endif
 
+#ifdef PROGRAM_BLD
 static inline __attribute__((always_inline)) void boot_to_app(uint32_t boot_addr) {
   MspAddress = STMFLASH_ReadWord(boot_addr);
   JumpAddress = STMFLASH_ReadWord(boot_addr + 4);
@@ -218,6 +221,14 @@ static inline __attribute__((always_inline)) void boot_to_app(uint32_t boot_addr
   LL_USART_DeInit(USART1);
   LL_DMA_DeInit(DMA1, LL_DMA_CHANNEL_5);
   LL_DMA_DeInit(DMA1, LL_DMA_CHANNEL_4);
+  LL_I2C_Disable(I2C1);
+  LL_I2C_DisableIT_ADDR(I2C1);
+  LL_I2C_DisableIT_NACK(I2C1);
+  LL_I2C_DisableIT_ERR(I2C1);
+  LL_I2C_DisableIT_STOP(I2C1);
+  LL_I2C_DisableIT_RX(I2C1);
+  LL_I2C_DisableIT_TX(I2C1);
+  LL_I2C_DeInit(I2C1);
   HAL_CRC_DeInit(&hcrc);
   HAL_DeInit();
 
@@ -228,6 +239,7 @@ static inline __attribute__((always_inline)) void boot_to_app(uint32_t boot_addr
   __set_MSP(MspAddress);
   JumpToApplication();
 }
+#endif
 
 void boot_param_check(uint8_t with_check) {
   BOOT_PARAM param;
@@ -253,6 +265,7 @@ void boot_param_check(uint8_t with_check) {
     printf_dbg("running in bld\r\n");
   }
 
+#ifdef PROGRAM_BLD
   if (!param.update_needed) {
     switch (param.app_status) {
       /* 默认状态，尝试引导 */
@@ -339,6 +352,7 @@ void boot_param_check(uint8_t with_check) {
   if (boot_param_update(&param)) {
     Error_Handler();
   }
+#endif
 }
 
 static void update_init(SYS_PARAM *sys) {

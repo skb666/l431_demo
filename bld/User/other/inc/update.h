@@ -5,6 +5,8 @@
 
 #include "onchip_flash.h"
 
+#define PROGRAM_BLD
+
 #define ADDR_BASE_BLD (STMFLASH_BASE)
 #define ADDR_BASE_PARAM (ADDR_FLASH_PAGE_16)
 #define ADDR_BASE_PARAM_BAK (ADDR_FLASH_PAGE_17)
