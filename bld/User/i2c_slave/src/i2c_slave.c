@@ -237,8 +237,6 @@ static void i2c_complete_cb(void) {
       reg->write_cb();
     }
   }
-
-  i2c_dev_reset();
 }
 
 void i2c_ev_isr(void) {
@@ -246,6 +244,9 @@ void i2c_ev_isr(void) {
   if (LL_I2C_IsActiveFlag_ADDR(I2C_TYPE)) {
     /* Verify the Address Match with the OWN Slave address */
     if (LL_I2C_GetAddressMatchCode(I2C_TYPE) == I2C_SLAVE_ADDRESS) {
+      /* Call function Slave Reset Callback */
+      i2c_dev_reset();
+
       /* Verify the transfer direction, a write direction, Slave enters receiver mode */
       if (LL_I2C_GetTransferDirection(I2C_TYPE) == LL_I2C_DIRECTION_WRITE) {
         /* Clear ADDR flag value in ISR register */
@@ -257,6 +258,7 @@ void i2c_ev_isr(void) {
         /* Clear ADDR flag value in ISR register */
         LL_I2C_ClearFlag_ADDR(I2C_TYPE);
 
+        /* Call function Slave Prepare Data Callback */
         i2c_prepare_data();
 
         /* Enable Transmit Interrupt */
