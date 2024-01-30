@@ -311,3 +311,19 @@ void i2c_ev_isr(void) {
     Error_Handler();
   }
 }
+
+void i2c_abnormal_check(uint16_t timeout) {
+  static uint16_t i2c_busy_time = 0;
+
+  if (LL_I2C_IsActiveFlag_BUSY(I2C_TYPE)) {
+    i2c_busy_time += 1;
+  } else {
+    i2c_busy_time = 0;
+  }
+
+  if (i2c_busy_time >= timeout) {
+    i2c_busy_time = 0;
+    LL_I2C_Disable(I2C_TYPE);
+    LL_I2C_Enable(I2C_TYPE);
+  }
+}

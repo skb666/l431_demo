@@ -42,6 +42,7 @@ typedef struct {
 
 void i2c_slave_config(void);
 void i2c_ev_isr(void);
+void i2c_abnormal_check(uint16_t timeout);
 
 uint16_t i2c_slave_tx_get(uint8_t *buf, uint16_t size);
 uint16_t i2c_slave_tx_put(const uint8_t *buf, uint16_t size);

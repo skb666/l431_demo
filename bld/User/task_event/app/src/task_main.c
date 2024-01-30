@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "device.h"
+#include "i2c_slave.h"
 #include "main.h"
 #include "param.h"
 #include "task.h"
@@ -49,6 +50,8 @@ void timer_1ms_init(void) {
 static void timer_1ms_cb(EVENT *ev) {
   switch (ev->type) {
     case EVENT_TYPE_TICK_1MS: {
+      // i2c 异常检测
+      i2c_abnormal_check(300);
       // 串口发送
       uart_tx_poll(DEV_USART1);
     } break;
