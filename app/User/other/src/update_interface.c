@@ -55,6 +55,7 @@ void update_frame_parse(frame_parse_t *frame) {
       memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
       memcpy(&g_update_pkg.head, frame_data, frame_length);
       if (frame->byte_order) {
+        change_byte_order(&g_update_pkg.head.partition_type, sizeof(g_update_pkg.head.partition_type));
         change_byte_order(&g_update_pkg.head.file_crc, sizeof(g_update_pkg.head.file_crc));
         change_byte_order(&g_update_pkg.head.file_size_real, sizeof(g_update_pkg.head.file_size_real));
         change_byte_order(&g_update_pkg.head.data_size_one, sizeof(g_update_pkg.head.data_size_one));

@@ -9,11 +9,11 @@
 #define ADDR_BASE_PARAM (ADDR_FLASH_PAGE_16)
 #define ADDR_BASE_PARAM_BAK (ADDR_FLASH_PAGE_17)
 #define ADDR_BASE_APP (ADDR_FLASH_PAGE_18)
-#define ADDR_BASE_APP_BAK (ADDR_FLASH_PAGE_73)
+#define ADDR_BASE_BACKUP (ADDR_FLASH_PAGE_73)
 
 #define PART_SIZE_BLD ((ADDR_BASE_PARAM) - (ADDR_BASE_BLD))          // 32KB
 #define PART_SIZE_PARAM ((ADDR_BASE_PARAM_BAK) - (ADDR_BASE_PARAM))  // 2KB
-#define PART_SIZE_APP ((ADDR_BASE_APP_BAK) - (ADDR_BASE_APP))        // 110KB
+#define PART_SIZE_APP ((ADDR_BASE_BACKUP) - (ADDR_BASE_APP))         // 110KB
 
 #define UPDATE_PACKAGE_MAX_SIZE 1024
 
@@ -37,6 +37,11 @@ typedef struct {
 } BOOT_PARAM;
 
 typedef enum {
+  PARTITION_APP = 0xFFFFFFFF,
+  PARTITION_BLD = 0xA5A5A5A5,
+} PARTITION_TYPE;
+
+typedef enum {
   PKG_TYPE_INIT = 0x1000,
   PKG_TYPE_FINISH = 0x0FFE,
   PKG_TYPE_HEAD = 0x0001,
@@ -44,6 +49,7 @@ typedef enum {
 } PKG_TYPE;
 
 typedef struct {
+  uint32_t partition_type;  // 分区类型
   uint32_t file_crc;        // 升级文件的 CRC 值
   uint32_t file_size_real;  // 升级文件实际大小
   uint16_t data_size_one;   // 单次传输的升级数据大小
@@ -66,6 +72,7 @@ typedef struct {
 } UPDATE_PKG;
 
 int8_t boot_param_update(BOOT_PARAM *param);
+int8_t boot_param_bak_update(BOOT_PARAM *param);
 void boot_param_get(BOOT_PARAM *pdata);
 void boot_param_check(uint8_t with_check);
 
