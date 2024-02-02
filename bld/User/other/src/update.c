@@ -267,7 +267,7 @@ static inline __attribute__((always_inline)) void boot_to_app(uint32_t boot_addr
   JumpAddress = STMFLASH_ReadWord(boot_addr + 4);
   JumpToApplication = (pFunction)JumpAddress;
 
-  if ((MspAddress & 0xFFFFC000) != 0x10000000 && (MspAddress & 0xFFFF0000) != 0x20000000) {
+  if ((MspAddress & 0xFFFF8000) != 0x10000000 && (MspAddress & 0xFFFF0000) != 0x20000000) {
     return;
   }
 
@@ -630,7 +630,7 @@ void update_pkg_process(void) {
           }
           /* 校验升级包是否可被引导 */
           msp_addr = STMFLASH_ReadWord(ADDR_BASE_BACKUP);
-          if ((msp_addr & 0xFFFFC000) != 0x10000000 && (msp_addr & 0xFFFF0000) != 0x20000000) {
+          if ((msp_addr & 0xFFFF8000) != 0x10000000 && (msp_addr & 0xFFFF0000) != 0x20000000) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_UNKNOW;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
