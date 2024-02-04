@@ -64,7 +64,7 @@ if __name__ == "__main__":
     sercomm.used_port_info()
 
     frame_head = b'\x55\xaa'
-    frame_type_system_ctrl = b'\x01'
+    frame_type_system_ctrl = b'\xf0'
     frame_type_update_data = b'\xf1'
     frame_type_update_status = b'\xf2'
     pkg_type_init = struct.pack('>H', 0x1000)

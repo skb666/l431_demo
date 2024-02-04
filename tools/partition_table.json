@@ -20,7 +20,7 @@
         "size": "0x1b800"
     },
     {
-        "name": "app_bak",
+        "name": "backup",
         "start": "0x08024800",
         "size": "0x1b800"
     }

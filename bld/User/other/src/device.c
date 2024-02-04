@@ -289,10 +289,10 @@ void uart_frame_parse(DEV_TYPE dev_type) {
     case PARSE_STAT_ID: {
       size = uart_read(dev_type, &rx_frame[dev_type].id, 1);
       if (size) {
-        if (rx_frame[dev_type].id == 0xff) {
+        if (rx_frame[dev_type].id == 0xFF) {
           rx_frame[dev_type].byte_order = 1;
           rx_frame[dev_type].status = PARSE_STAT_HEAD1;
-        } else if (rx_frame[dev_type].id == 0xfe) {
+        } else if (rx_frame[dev_type].id == 0xFE) {
           rx_frame[dev_type].byte_order = 0;
           rx_frame[dev_type].status = PARSE_STAT_HEAD1;
         } else if (rx_frame[dev_type].id < FUNC_LIST_MAX && func_list[dev_type][rx_frame[dev_type].id]) {

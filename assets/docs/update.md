@@ -648,10 +648,10 @@ sequenceDiagram
 ```c
 typedef enum {
   FRAME_TYPE_DEBUG = 0x00,
-  FRAME_TYPE_SYSTEM_CTRL = 0x01,
-  FRAME_TYPE_UPDATE_DATA = 0xf1,
-  FRAME_TYPE_UPDATE_STATUS = 0xf2,
-  FRAME_TYPE_MAX,
+  FRAME_TYPE_SYSTEM_CTRL = 0xF0,
+  FRAME_TYPE_UPDATE_DATA = 0xF1,
+  FRAME_TYPE_UPDATE_STATUS = 0xF2,
+  FRAME_TYPE_MAX = FUNC_LIST_MAX,
 } FRAME_TYPE;
 ```
 
@@ -812,6 +812,14 @@ i2c 从机实现基于 [i2c 从机实现](/i2c_slave.md)
 #### 相关寄存器及处理函数注册
 
 ```c
+typedef enum {
+  REG_VERSION = 0x0000,
+  REG_SYSTEM_CTRL = 0xFF00,
+  REG_UPDATE_DATA = 0xFF01,
+  REG_UPDATE_STATUS = 0xFF02,
+  REG_MAX = 0xFFFF,
+} REG_NAME;
+
 static REG_T s_reg_list[] = {
     {REG_VERSION, REG_RO, reg_read_cb_version, NULL},
     {REG_SYSTEM_CTRL, REG_RW, reg_read_cb_system_ctrl, reg_write_cb_system_ctrl},

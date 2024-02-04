@@ -13,7 +13,7 @@
 #define FRAME_DATA_LEN_MAX 1280
 #define FRAME_HEAD1 0x55
 #define FRAME_HEAD2 0xAA
-#define FUNC_LIST_MAX 254
+#define FUNC_LIST_MAX 0xFE
 
 #ifdef __cplusplus
 extern "C" {

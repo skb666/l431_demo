@@ -187,7 +187,7 @@ void boot_param_get(BOOT_PARAM *pdata) {
 #### 引导参数校验与修正
   
 
-![](/assets/other/9e0bf638ef74184250e742a6ab9721970.png?0.5183792692219777)  
+![](/assets/other/9e0bf638ef74184250e742a6ab9721970.png?0.5875066329583529)  
   
 主要逻辑实现如下：
   
@@ -568,7 +568,7 @@ typedef struct {
 #### 固件传输流程
   
 
-![](/assets/other/9e0bf638ef74184250e742a6ab9721971.png?0.9556767491851565)  
+![](/assets/other/9e0bf638ef74184250e742a6ab9721971.png?0.26278042362380205)  
   
 中间 errno 获取到的值为 0 表示正常；若不为 0，根据错误码执行对应的操作
   
@@ -583,10 +583,10 @@ typedef struct {
 ```c
 typedef enum {
   FRAME_TYPE_DEBUG = 0x00,
-  FRAME_TYPE_SYSTEM_CTRL = 0x01,
-  FRAME_TYPE_UPDATE_DATA = 0xf1,
-  FRAME_TYPE_UPDATE_STATUS = 0xf2,
-  FRAME_TYPE_MAX,
+  FRAME_TYPE_SYSTEM_CTRL = 0xF0,
+  FRAME_TYPE_UPDATE_DATA = 0xF1,
+  FRAME_TYPE_UPDATE_STATUS = 0xF2,
+  FRAME_TYPE_MAX = FUNC_LIST_MAX,
 } FRAME_TYPE;
 ```
   
@@ -747,6 +747,14 @@ i2c 从机实现基于 [i2c 从机实现](/i2c_slave.md )
 #### 相关寄存器及处理函数注册
   
 ```c
+typedef enum {
+  REG_VERSION = 0x0000,
+  REG_SYSTEM_CTRL = 0xFF00,
+  REG_UPDATE_DATA = 0xFF01,
+  REG_UPDATE_STATUS = 0xFF02,
+  REG_MAX = 0xFFFF,
+} REG_NAME;
+  
 static REG_T s_reg_list[] = {
     {REG_VERSION, REG_RO, reg_read_cb_version, NULL},
     {REG_SYSTEM_CTRL, REG_RW, reg_read_cb_system_ctrl, reg_write_cb_system_ctrl},

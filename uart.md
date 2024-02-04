@@ -79,7 +79,7 @@ static uint8_t __uart_tx_ring_data[DEV_NUM][UART_TX_RING_SIZE];
 #### 接收总体流程
   
 
-![](/assets/other/bac20c535e54e4eb7d42dcb81e1751cb0.png?0.9118199685610824)  
+![](/assets/other/bac20c535e54e4eb7d42dcb81e1751cb0.png?0.7293600700300915)  
   
 #### 接收关键配置
   
@@ -231,7 +231,7 @@ void uart_dmarx_part_done_isr(DEV_TYPE dev_type) {
 #### 发送总体流程
   
 
-![](/assets/other/bac20c535e54e4eb7d42dcb81e1751cb1.png?0.26682149518067155)  
+![](/assets/other/bac20c535e54e4eb7d42dcb81e1751cb1.png?0.6695467683981755)  
   
 #### 发送关键配置
   
@@ -481,7 +481,7 @@ typedef struct {
 #### 帧处理函数注册
   
 ```c
-#define FUNC_LIST_MAX 254
+#define FUNC_LIST_MAX 0xFE
   
 static void (*func_list[DEV_NUM][FUNC_LIST_MAX])(frame_parse_t *);
   
@@ -506,7 +506,7 @@ int8_t frame_parse_register(uint8_t index, void (*func)(frame_parse_t *)) {
 #### 接收状态机
   
 
-![](/assets/other/bac20c535e54e4eb7d42dcb81e1751cb2.png?0.09843756555806382)  
+![](/assets/other/bac20c535e54e4eb7d42dcb81e1751cb2.png?0.6843867716497238)  
   
 **ID 的特殊用途**
   
@@ -543,10 +543,10 @@ void uart_frame_parse(DEV_TYPE dev_type) {
     case PARSE_STAT_ID: {
       size = uart_read(dev_type, &rx_frame[dev_type].id, 1);
       if (size) {
-        if (rx_frame[dev_type].id == 0xff) {
+        if (rx_frame[dev_type].id == 0xFF) {
           rx_frame[dev_type].byte_order = 1;
           rx_frame[dev_type].status = PARSE_STAT_HEAD1;
-        } else if (rx_frame[dev_type].id == 0xfe) {
+        } else if (rx_frame[dev_type].id == 0xFE) {
           rx_frame[dev_type].byte_order = 0;
           rx_frame[dev_type].status = PARSE_STAT_HEAD1;
         } else if (rx_frame[dev_type].id < FUNC_LIST_MAX && func_list[dev_type][rx_frame[dev_type].id]) {
