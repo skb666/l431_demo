@@ -298,8 +298,10 @@ void i2c_ev_isr(void) {
       LL_I2C_ClearFlag_TXE(I2C_SLAVE_TYPE);
     }
 
-    /* Call function Slave Complete Callback */
-    i2c_complete_cb();
+    if (LL_I2C_GetTransferDirection(I2C_SLAVE_TYPE) == LL_I2C_DIRECTION_WRITE) {
+      /* Call function Slave Complete Callback */
+      i2c_complete_cb();
+    }
   }
   /* Check TXE flag value in ISR register */
   else if (!LL_I2C_IsActiveFlag_TXE(I2C_SLAVE_TYPE)) {
