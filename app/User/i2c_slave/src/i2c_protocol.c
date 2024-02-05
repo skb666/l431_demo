@@ -1,7 +1,8 @@
 #include "i2c_protocol.h"
 
+#include <string.h>
+
 #include "common.h"
-#include "device.h"
 #include "i2c_slave.h"
 #include "main.h"
 #include "param.h"

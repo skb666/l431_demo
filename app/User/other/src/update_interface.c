@@ -2,9 +2,9 @@
 #include <string.h>
 
 #include "common.h"
-#include "device.h"
 #include "main.h"
 #include "param.h"
+#include "uart_device.h"
 #include "update.h"
 
 extern UPDATE_PKG g_update_pkg;

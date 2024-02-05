@@ -23,12 +23,13 @@ file(GLOB_RECURSE SOURCE_FILES
   "Drivers/STM32L4xx_HAL_Driver/Src/*.c"
   "User/RING_FIFO/src/*.c"
   "User/FLASH/src/*.c"
-  "User/KEY/src/*.c"
+  "User/event_button/src/*.c"
+  "User/libcrc/crc32_mpeg2/*.c"
+  "User/uart_device/src/*.c"
+  "User/i2c_slave/src/*.c"
   "User/task_event/core/src/*.c"
   "User/task_event/user/src/*.c"
   "User/task_event/app/src/*.c"
-  "User/libcrc/crc32_mpeg2/*.c"
-  "User/i2c_slave/src/*.c"
   "User/other/src/*.c"
 )
 MESSAGE(STATUS "SOURCE_FILES: " ${SOURCE_FILES})
@@ -52,11 +53,12 @@ target_include_directories(${PROJECT_NAME}.elf PUBLIC
   "Drivers/CMSIS/Device/ST/STM32L4xx/Include"
   "User/RING_FIFO/inc"
   "User/FLASH/inc"
-  "User/KEY/inc"
+  "User/event_button/inc"
+  "User/libcrc/crc32_mpeg2"
+  "User/uart_device/inc"
+  "User/i2c_slave/inc"
   "User/task_event/core/inc"
   "User/task_event/user/inc"
-  "User/libcrc/crc32_mpeg2"
-  "User/i2c_slave/inc"
   "User/other/inc"
 )
 

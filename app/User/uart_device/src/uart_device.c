@@ -1,4 +1,4 @@
-#include "device.h"
+#include "uart_device.h"
 
 #include <stdarg.h>
 

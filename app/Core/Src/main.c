@@ -28,7 +28,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "device.h"
+#include "uart_device.h"
 #include "i2c_slave.h"
 #include "param.h"
 #include "task.h"

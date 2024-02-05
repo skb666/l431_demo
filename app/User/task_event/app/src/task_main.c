@@ -2,12 +2,12 @@
 
 #include "combo_key.h"
 #include "common.h"
-#include "device.h"
 #include "i2c_slave.h"
 #include "main.h"
 #include "param.h"
 #include "task.h"
 #include "timer.h"
+#include "uart_device.h"
 #include "update.h"
 
 typedef enum {
