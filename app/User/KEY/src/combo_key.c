@@ -49,27 +49,49 @@ int key_combo_release_count(KEY *key) {
 }
 
 int8_t key_register(uint16_t id, KEY_VALUE (*get)(void), void *custom_data, uint16_t valid, uint16_t ageing, uint16_t long_press) {
-  if (key_list.num >= KEY_NUM_MAX) {
+  KEY *key = NULL;
+
+  key = key_find_by_id(id);
+  if (key != NULL) {
+    key->enable = 1;
+    key->valid = valid;
+    key->ageing = ageing;
+    key->long_press = long_press;
+    key->get = get;
+    key->custom_data = custom_data;
+  } else {
+    if (key_list.num >= KEY_NUM_MAX) {
+      return -1;
+    }
+
+    key_list.key[key_list.num].status = KS_NONE;
+    key_list.key[key_list.num].event = KE_NONE;
+    key_list.key[key_list.num].id = id;
+    key_list.key[key_list.num].enable = 1;
+    key_list.key[key_list.num].valid = valid;
+    key_list.key[key_list.num].ageing = ageing;
+    key_list.key[key_list.num].long_press = long_press;
+    key_list.key[key_list.num].press_cnt = 0;
+    key_list.key[key_list.num].release_cnt = 0;
+    key_list.key[key_list.num].press_time = 0;
+    key_list.key[key_list.num].release_time = 0;
+    key_list.key[key_list.num].get = get;
+    key_list.key[key_list.num].custom_data = custom_data;
+    key_list.num += 1;
+  }
+
+  return 0;
+}
+
+int8_t key_unregister(uint16_t id) {
+  KEY *key = NULL;
+
+  key = key_find_by_id(id);
+  if (key == NULL) {
     return -1;
   }
 
-  if (key_find_by_id(id) != NULL) {
-    return -2;
-  }
-
-  key_list.key[key_list.num].status = KS_NONE;
-  key_list.key[key_list.num].event = KE_NONE;
-  key_list.key[key_list.num].id = id;
-  key_list.key[key_list.num].valid = valid;
-  key_list.key[key_list.num].ageing = ageing;
-  key_list.key[key_list.num].long_press = long_press;
-  key_list.key[key_list.num].press_cnt = 0;
-  key_list.key[key_list.num].release_cnt = 0;
-  key_list.key[key_list.num].press_time = 0;
-  key_list.key[key_list.num].release_time = 0;
-  key_list.key[key_list.num].get = get;
-  key_list.key[key_list.num].custom_data = custom_data;
-  key_list.num += 1;
+  key->enable = 0;
 
   return 0;
 }
@@ -77,6 +99,10 @@ int8_t key_register(uint16_t id, KEY_VALUE (*get)(void), void *custom_data, uint
 KEY_EVENT combo_key_event_check(KEY *key) {
   if (key == NULL) {
     return KE_ERROR;
+  }
+
+  if (!key->enable) {
+    return KE_NONE;
   }
 
   key->event = KE_NONE;

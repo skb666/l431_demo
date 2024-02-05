@@ -36,9 +36,10 @@ typedef struct {
   KEY_STATUS status;      // 内部按键状态
   KEY_EVENT event;        // 按键事件
   uint16_t id;            // 按键 ID
+  uint16_t enable;        // 是否使能
   uint16_t valid;         // 电平有效时间
   uint16_t ageing;        // 老化时间
-  uint16_t long_press;    // 长按判断时间
+  uint16_t long_press;    // 长按判定时间
   uint16_t press_cnt;     // 内部按下计数
   uint16_t release_cnt;   // 内部释放计数
   uint16_t press_time;    // 按键按下次数
@@ -54,6 +55,7 @@ int key_combo_press_count(KEY *key);
 int key_combo_release_count(KEY *key);
 
 int8_t key_register(uint16_t id, KEY_VALUE (*get)(void), void *custom_data, uint16_t valid, uint16_t ageing, uint16_t long_press);
+int8_t key_unregister(uint16_t id);
 KEY_EVENT combo_key_event_check(KEY *key);
 
 #ifdef __cplusplus
