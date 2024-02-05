@@ -94,7 +94,7 @@ static KEY_VALUE getKey(void) {
 
 void key_scan_init(void) {
   task_event_subscribe(EVENT_TYPE_TICK_5MS, TASK_ID_KEY_SCAN);
-  key_register(0, getKey, NULL, 4, 75);
+  key_register(0, getKey, NULL, 4, 75, 200);
 }
 
 static void key_scan_cb(EVENT *ev) {

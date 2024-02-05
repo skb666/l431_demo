@@ -48,7 +48,7 @@ int key_combo_release_count(KEY *key) {
   return key->release_time;
 }
 
-int8_t key_register(uint16_t id, KEY_VALUE (*get)(void), void *custom_data, uint16_t valid, uint16_t ageing) {
+int8_t key_register(uint16_t id, KEY_VALUE (*get)(void), void *custom_data, uint16_t valid, uint16_t ageing, uint16_t long_press) {
   if (key_list.num >= KEY_NUM_MAX) {
     return -1;
   }
@@ -62,6 +62,7 @@ int8_t key_register(uint16_t id, KEY_VALUE (*get)(void), void *custom_data, uint
   key_list.key[key_list.num].id = id;
   key_list.key[key_list.num].valid = valid;
   key_list.key[key_list.num].ageing = ageing;
+  key_list.key[key_list.num].long_press = long_press;
   key_list.key[key_list.num].press_cnt = 0;
   key_list.key[key_list.num].release_cnt = 0;
   key_list.key[key_list.num].press_time = 0;
@@ -113,7 +114,7 @@ KEY_EVENT combo_key_event_check(KEY *key) {
     case KS_PRESS: {
       if (key->get() == K_PRESS) {
         key->press_cnt += 1;
-        if (key->press_cnt == key->ageing) {
+        if (key->press_cnt == key->long_press) {
           key->event = KE_LONG_PRESS;
         }
       } else {
@@ -122,7 +123,7 @@ KEY_EVENT combo_key_event_check(KEY *key) {
       }
     } break;
     case KS_RELEASE: {
-      if (key->press_cnt >= key->ageing) {
+      if (key->press_cnt >= key->long_press) {
         key->event = KE_LONG_RELEASE;
         key->status = KS_NONE;
         break;
