@@ -201,10 +201,11 @@ sf_i2c_err i2c_write_byte(const i2c_dev *dev, uint8_t byte) {
   for (i = 0; i < 8; i++) {
     I2C_PIN_SCL_LOW(dev);
     i2c_delay(dev);
-    if (byte & 0x80)
+    if (byte & 0x80) {
       I2C_PIN_SDA_HIGH(dev);
-    else
+    } else {
       I2C_PIN_SDA_LOW(dev);
+    }
     I2C_PIN_SCL_HIGH(dev);
     i2c_delay(dev);
     byte <<= 1;
@@ -252,8 +253,8 @@ uint8_t i2c_read_byte(const i2c_dev *dev, uint8_t ack) {
  *         IIC_TIMEOUT : Timeout,Device response is not received
  */
 sf_i2c_err i2c_write_multi_byte(const i2c_dev *dev, uint8_t slave_addr, uint8_t reg_addr, void *pbuf, uint16_t length) {
-  uint8_t i;
-  sf_i2c_err err;
+  uint16_t i;
+  sf_i2c_err err = SF_I2C_SUCCESS;
   uint8_t *p = (uint8_t *)pbuf;
 
   i2c_start(dev);
@@ -277,7 +278,7 @@ sf_i2c_err i2c_write_multi_byte(const i2c_dev *dev, uint8_t slave_addr, uint8_t 
  * @return none
  */
 void i2c_read_multi_byte(const i2c_dev *dev, uint8_t slave_addr, uint8_t reg_addr, void *pbuf, uint16_t length) {
-  uint8_t i;
+  uint16_t i;
   uint8_t *p = (uint8_t *)pbuf;
 
   i2c_start(dev);
@@ -307,8 +308,8 @@ void i2c_read_multi_byte(const i2c_dev *dev, uint8_t slave_addr, uint8_t reg_add
  *         IIC_TIMEOUT : Timeout,Device response is not received
  */
 sf_i2c_err i2c_write_multi_byte_16bit(const i2c_dev *dev, uint8_t slave_addr, uint16_t reg_addr, void *pbuf, uint16_t length) {
-  uint8_t i;
-  sf_i2c_err err;
+  uint16_t i;
+  sf_i2c_err err = SF_I2C_SUCCESS;
   uint8_t *p = (uint8_t *)pbuf;
 
   i2c_start(dev);
@@ -333,7 +334,7 @@ sf_i2c_err i2c_write_multi_byte_16bit(const i2c_dev *dev, uint8_t slave_addr, ui
  * @return none
  */
 void i2c_read_multi_byte_16bit(const i2c_dev *dev, uint8_t slave_addr, uint16_t reg_addr, void *pbuf, uint16_t length) {
-  uint8_t i;
+  uint16_t i;
   uint8_t *p = (uint8_t *)pbuf;
 
   i2c_start(dev);

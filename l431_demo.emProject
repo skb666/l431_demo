@@ -125,6 +125,7 @@
         </folder>
       </folder>
       <folder Name="other">
+        <file file_name="../User/other/src/i2c_control.c" />
         <file file_name="../User/other/src/param.c" />
         <file file_name="../User/other/src/update.c" />
         <file file_name="../User/other/src/update_interface.c" />

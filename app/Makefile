@@ -54,6 +54,7 @@ User/task_event/core/src/timer.c \
 User/task_event/user/src/task_user.c \
 User/task_event/user/src/timer_user.c \
 User/task_event/app/src/task_main.c \
+User/other/src/i2c_control.c \
 User/other/src/param.c \
 User/other/src/update.c \
 User/other/src/update_interface.c \

@@ -15,7 +15,7 @@ __STATIC_INLINE void i2c0_sda_pin_dir_output(void);
 // 定义iic1驱动对象
 static i2c_dev i2c0_dev = {
     .name = I2C0_NAME,
-    .speed = 20,
+    .speed = 40,
     .port.sda_pin_out_low = i2c0_sda_pin_out_low,
     .port.sda_pin_out_high = i2c0_sda_pin_out_high,
     .port.scl_pin_out_low = i2c0_scl_pin_out_low,

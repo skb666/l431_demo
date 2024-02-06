@@ -25,7 +25,7 @@ if __name__ == "__main__":
     partition_type_bld = struct.pack('>I', 0xa5a5a5a5)
     partition_type = partition_type_app
 
-    portname = "COM5"
+    portname = "COM4"
     baudrate = 115200
     filename = ""
 
@@ -136,7 +136,7 @@ if __name__ == "__main__":
             time.sleep(1)
             (errno, running, pkg_num) = get_update_status()
             print(f"status: {errno}, {running}, {pkg_num:03d}\r\n")
-            time.sleep(0.1)
+            time.sleep(0.2)
             if pkg_num == pkg_num_send:
                 crc32_mpeg2_file.accumulate(update_data)
                 pkg_num_send += 1
@@ -160,34 +160,37 @@ if __name__ == "__main__":
     packed = frame_head + struct.pack('>H', 0xfffe)[:1]
     chars = sercomm.write_raw(packed)
     print("set to big-endian\r\n")
-    time.sleep(0.1)
+    time.sleep(0.2)
 
     """ 获取初始状态 """
     (errno, running, pkg_num) = get_update_status()
     print(f"status: {errno}, {running}, 0x{pkg_num:03x}\r\n")
-    time.sleep(0.1)
+    time.sleep(0.2)
 
     """ 升级初始化 """
     retry = 3
     while retry and (errno or not running or pkg_num != 0x0fff):
         retry -= 1
         update_init()
-        time.sleep(1)
+        time.sleep(3)
         (errno, running, pkg_num) = get_update_status()
-        time.sleep(0.1)
+        time.sleep(0.2)
     print(f"status: {errno}, {running}, 0x{pkg_num:03x}\r\n")
     if not retry and (errno or not running or pkg_num != 0x0fff):
         print("error: update_init")
         exit()
 
     """ 升级文件头信息包 """
-    (file_crc, file_size_real, data_size_one, pkg_num_total) = update_head(partition_type)
+    retry = 3
+    while retry and (errno or not running or pkg_num != 0x0000):
+        retry -= 1
+        (file_crc, file_size_real, data_size_one, pkg_num_total) = update_head(partition_type)
+        time.sleep(0.2)
+        (errno, running, pkg_num) = get_update_status()
+        time.sleep(0.2)
     print(f"file_crc: 0x{file_crc:08x}\r\nfile_size_real: {file_size_real}\r\ndata_size_one: {data_size_one}\r\npkg_num_total: {pkg_num_total}")
-    time.sleep(0.1)
-    (errno, running, pkg_num) = get_update_status()
     print(f"status: {errno}, {running}, 0x{pkg_num:03x}\r\n")
-    time.sleep(0.1)
-    if errno or not running or pkg_num != 0x0000:
+    if not retry and (errno or not running or pkg_num != 0x0000):
         print("error: update_head")
         exit()
 
@@ -200,9 +203,9 @@ if __name__ == "__main__":
 
     """ 结束升级 """
     update_finish()
-    time.sleep(1)
+    time.sleep(3)
     (errno, running, pkg_num) = get_update_status()
-    time.sleep(0.1)
+    time.sleep(0.2)
     print(f"status: {errno}, {running}, 0x{pkg_num:03x}\r\n")
     if not errno and not running and pkg_num == 0x0ffe:
         print("success")

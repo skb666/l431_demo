@@ -29,11 +29,10 @@
 /* USER CODE BEGIN Includes */
 #include "uart_device.h"
 #include "i2c_slave.h"
+#include "bsp_i2c.h"
 #include "param.h"
 #include "task.h"
 #include "update.h"
-#include "common.h"
-#include "bsp_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,9 +53,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-static i2c_dev *sw_i2c;
-static uint8_t i2c_buf[1280];
-static uint16_t i2c_buf_size = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -114,39 +111,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   sys_param_init();
   task_init();
-
-  sw_i2c = i2c_obj_find(I2C0_NAME);
-  if (sw_i2c) {
-    i2c_buf_size = 2;
-    i2c_read_multi_byte_16bit(sw_i2c, 0x3c, 0xff02, i2c_buf, i2c_buf_size);
-    for (uint16_t i = 1; i <= i2c_buf_size; ++i) {
-      printf_dbg("0x%02hhx ", i2c_buf[i - 1]);
-      if (i % 16 == 0) {
-        printf_dbg("\r\n");
-      }
-    }
-    printf_dbg("\r\n");
-
-    i2c_buf_size = 2;
-    i2c_read_multi_byte_16bit(sw_i2c, 0x3c, 0x0000, i2c_buf, i2c_buf_size);
-    for (uint16_t i = 1; i <= i2c_buf_size; ++i) {
-      printf_dbg("0x%02hhx ", i2c_buf[i - 1]);
-      if (i % 16 == 0) {
-        printf_dbg("\r\n");
-      }
-    }
-    printf_dbg("\r\n");
-
-    i2c_buf_size = 2;
-    i2c_read_multi_byte_16bit(sw_i2c, 0x3c, 0xff02, i2c_buf, i2c_buf_size);
-    for (uint16_t i = 1; i <= i2c_buf_size; ++i) {
-      printf_dbg("0x%02hhx ", i2c_buf[i - 1]);
-      if (i % 16 == 0) {
-        printf_dbg("\r\n");
-      }
-    }
-    printf_dbg("\r\n");
-  }
 
   while (1)
   {
