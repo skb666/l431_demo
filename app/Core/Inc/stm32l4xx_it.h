@@ -60,8 +60,8 @@ void DMA1_Channel5_IRQHandler(void);
 void I2C1_EV_IRQHandler(void);
 void I2C1_ER_IRQHandler(void);
 void USART1_IRQHandler(void);
+void DMA2_Channel6_IRQHandler(void);
 void DMA2_Channel7_IRQHandler(void);
-void QUADSPI_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

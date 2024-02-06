@@ -205,43 +205,6 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles DMA1 channel4 global interrupt.
-  */
-void DMA1_Channel4_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Channel4_IRQn 0 */
-
-  /* USER CODE END DMA1_Channel4_IRQn 0 */
-
-  /* USER CODE BEGIN DMA1_Channel4_IRQn 1 */
-  if (LL_DMA_IsActiveFlag_TC4(DMA1)) {
-    LL_DMA_ClearFlag_TC4(DMA1);
-    uart_dmatx_done_isr(DEV_USART1);
-  }
-  /* USER CODE END DMA1_Channel4_IRQn 1 */
-}
-
-/**
-  * @brief This function handles DMA1 channel5 global interrupt.
-  */
-void DMA1_Channel5_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Channel5_IRQn 0 */
-
-  /* USER CODE END DMA1_Channel5_IRQn 0 */
-
-  /* USER CODE BEGIN DMA1_Channel5_IRQn 1 */
-  if (LL_DMA_IsActiveFlag_HT5(DMA1)) {
-    LL_DMA_ClearFlag_HT5(DMA1);
-    uart_dmarx_part_done_isr(DEV_USART1);
-  } else if (LL_DMA_IsActiveFlag_TC5(DMA1)) {
-    LL_DMA_ClearFlag_TC5(DMA1);
-    uart_dmarx_done_isr(DEV_USART1);
-  }
-  /* USER CODE END DMA1_Channel5_IRQn 1 */
-}
-
-/**
   * @brief This function handles I2C1 event interrupt.
   */
 void I2C1_EV_IRQHandler(void)
@@ -283,6 +246,43 @@ void USART1_IRQHandler(void)
     uart_dmarx_part_done_isr(DEV_USART1);
   }
   /* USER CODE END USART1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA2 channel6 global interrupt.
+  */
+void DMA2_Channel6_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA2_Channel6_IRQn 0 */
+
+  /* USER CODE END DMA2_Channel6_IRQn 0 */
+
+  /* USER CODE BEGIN DMA2_Channel6_IRQn 1 */
+  if (LL_DMA_IsActiveFlag_TC6(DMA2)) {
+    LL_DMA_ClearFlag_TC6(DMA2);
+    uart_dmatx_done_isr(DEV_USART1);
+  }
+  /* USER CODE END DMA2_Channel6_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA2 channel7 global interrupt.
+  */
+void DMA2_Channel7_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA2_Channel7_IRQn 0 */
+
+  /* USER CODE END DMA2_Channel7_IRQn 0 */
+
+  /* USER CODE BEGIN DMA2_Channel7_IRQn 1 */
+  if (LL_DMA_IsActiveFlag_HT7(DMA2)) {
+    LL_DMA_ClearFlag_HT7(DMA2);
+    uart_dmarx_part_done_isr(DEV_USART1);
+  } else if (LL_DMA_IsActiveFlag_TC7(DMA2)) {
+    LL_DMA_ClearFlag_TC7(DMA2);
+    uart_dmarx_done_isr(DEV_USART1);
+  }
+  /* USER CODE END DMA2_Channel7_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

@@ -22,7 +22,6 @@
 #include "dma.h"
 #include "i2c.h"
 #include "iwdg.h"
-#include "quadspi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -99,8 +98,8 @@ int main(void)
   MX_CRC_Init();
   MX_USART1_UART_Init();
   MX_IWDG_Init();
-  MX_QUADSPI_Init();
   MX_I2C1_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   uart_config(DEV_USART1);
   i2c_slave_config();

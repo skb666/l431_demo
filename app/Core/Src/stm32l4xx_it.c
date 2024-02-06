@@ -59,8 +59,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DMA_HandleTypeDef hdma_quadspi;
-extern QSPI_HandleTypeDef hqspi;
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -215,10 +214,7 @@ void DMA1_Channel4_IRQHandler(void)
   /* USER CODE END DMA1_Channel4_IRQn 0 */
 
   /* USER CODE BEGIN DMA1_Channel4_IRQn 1 */
-  if (LL_DMA_IsActiveFlag_TC4(DMA1)) {
-    LL_DMA_ClearFlag_TC4(DMA1);
-    uart_dmatx_done_isr(DEV_USART1);
-  }
+
   /* USER CODE END DMA1_Channel4_IRQn 1 */
 }
 
@@ -232,13 +228,7 @@ void DMA1_Channel5_IRQHandler(void)
   /* USER CODE END DMA1_Channel5_IRQn 0 */
 
   /* USER CODE BEGIN DMA1_Channel5_IRQn 1 */
-  if (LL_DMA_IsActiveFlag_HT5(DMA1)) {
-    LL_DMA_ClearFlag_HT5(DMA1);
-    uart_dmarx_part_done_isr(DEV_USART1);
-  } else if (LL_DMA_IsActiveFlag_TC5(DMA1)) {
-    LL_DMA_ClearFlag_TC5(DMA1);
-    uart_dmarx_done_isr(DEV_USART1);
-  }
+
   /* USER CODE END DMA1_Channel5_IRQn 1 */
 }
 
@@ -287,6 +277,23 @@ void USART1_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles DMA2 channel6 global interrupt.
+  */
+void DMA2_Channel6_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA2_Channel6_IRQn 0 */
+
+  /* USER CODE END DMA2_Channel6_IRQn 0 */
+
+  /* USER CODE BEGIN DMA2_Channel6_IRQn 1 */
+  if (LL_DMA_IsActiveFlag_TC6(DMA2)) {
+    LL_DMA_ClearFlag_TC6(DMA2);
+    uart_dmatx_done_isr(DEV_USART1);
+  }
+  /* USER CODE END DMA2_Channel6_IRQn 1 */
+}
+
+/**
   * @brief This function handles DMA2 channel7 global interrupt.
   */
 void DMA2_Channel7_IRQHandler(void)
@@ -294,24 +301,16 @@ void DMA2_Channel7_IRQHandler(void)
   /* USER CODE BEGIN DMA2_Channel7_IRQn 0 */
 
   /* USER CODE END DMA2_Channel7_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_quadspi);
+
   /* USER CODE BEGIN DMA2_Channel7_IRQn 1 */
-
+  if (LL_DMA_IsActiveFlag_HT7(DMA2)) {
+    LL_DMA_ClearFlag_HT7(DMA2);
+    uart_dmarx_part_done_isr(DEV_USART1);
+  } else if (LL_DMA_IsActiveFlag_TC7(DMA2)) {
+    LL_DMA_ClearFlag_TC7(DMA2);
+    uart_dmarx_done_isr(DEV_USART1);
+  }
   /* USER CODE END DMA2_Channel7_IRQn 1 */
-}
-
-/**
-  * @brief This function handles QUADSPI global interrupt.
-  */
-void QUADSPI_IRQHandler(void)
-{
-  /* USER CODE BEGIN QUADSPI_IRQn 0 */
-
-  /* USER CODE END QUADSPI_IRQn 0 */
-  HAL_QSPI_IRQHandler(&hqspi);
-  /* USER CODE BEGIN QUADSPI_IRQn 1 */
-
-  /* USER CODE END QUADSPI_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

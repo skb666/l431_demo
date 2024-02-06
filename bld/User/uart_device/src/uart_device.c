@@ -42,32 +42,32 @@ void uart_config(DEV_TYPE dev_type) {
   switch (dev_type) {
     case DEV_USART1: {
       /* USART_RX DMA */
-      LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_5,
+      LL_DMA_ConfigAddresses(DMA2, LL_DMA_CHANNEL_7,
           LL_USART_DMA_GetRegAddr(USART1, LL_USART_DMA_REG_DATA_RECEIVE),
           (uint32_t)uart_dmarx_buf[DEV_USART1],
-          LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_5));
-      LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_5, UART_DMARX_BUF_SIZE);
+          LL_DMA_GetDataTransferDirection(DMA2, LL_DMA_CHANNEL_7));
+      LL_DMA_SetDataLength(DMA2, LL_DMA_CHANNEL_7, UART_DMARX_BUF_SIZE);
 
       /* USART_TX DMA */
-      LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_4,
+      LL_DMA_ConfigAddresses(DMA2, LL_DMA_CHANNEL_6,
           (uint32_t)uart_dmatx_buf[DEV_USART1],
           LL_USART_DMA_GetRegAddr(USART1, LL_USART_DMA_REG_DATA_TRANSMIT),
-          LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_4));
+          LL_DMA_GetDataTransferDirection(DMA2, LL_DMA_CHANNEL_6));
 
-      LL_DMA_ClearFlag_HT5(DMA1);
-      LL_DMA_ClearFlag_TC5(DMA1);
-      LL_DMA_ClearFlag_TE5(DMA1);
+      LL_DMA_ClearFlag_HT7(DMA2);
+      LL_DMA_ClearFlag_TC7(DMA2);
+      LL_DMA_ClearFlag_TE7(DMA2);
 
-      LL_DMA_ClearFlag_TC4(DMA1);
-      LL_DMA_ClearFlag_TE4(DMA1);
+      LL_DMA_ClearFlag_TC6(DMA2);
+      LL_DMA_ClearFlag_TE6(DMA2);
 
-      LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_5);
-      LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_5);
-      LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_4);
+      LL_DMA_EnableIT_HT(DMA2, LL_DMA_CHANNEL_7);
+      LL_DMA_EnableIT_TC(DMA2, LL_DMA_CHANNEL_7);
+      LL_DMA_EnableIT_TC(DMA2, LL_DMA_CHANNEL_6);
 
       LL_USART_EnableDMAReq_RX(USART1);
       LL_USART_EnableDMAReq_TX(USART1);
-      LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_5);
+      LL_DMA_EnableChannel(DMA2, LL_DMA_CHANNEL_7);
 
       LL_USART_EnableIT_IDLE(USART1);
     } break;
@@ -145,7 +145,7 @@ void uart_dmarx_part_done_isr(DEV_TYPE dev_type) {
 
   switch (dev_type) {
     case DEV_USART1: {
-      recv_total_size = UART_DMARX_BUF_SIZE - LL_DMA_GetDataLength(DMA1, LL_DMA_CHANNEL_5);
+      recv_total_size = UART_DMARX_BUF_SIZE - LL_DMA_GetDataLength(DMA2, LL_DMA_CHANNEL_7);
     } break;
     default: {
       return;
@@ -209,9 +209,9 @@ void uart_tx_poll(DEV_TYPE dev_type) {
 
   switch (dev_type) {
     case DEV_USART1: {
-      LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_4);
-      LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_4, size);
-      LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_4);
+      LL_DMA_DisableChannel(DMA2, LL_DMA_CHANNEL_6);
+      LL_DMA_SetDataLength(DMA2, LL_DMA_CHANNEL_6, size);
+      LL_DMA_EnableChannel(DMA2, LL_DMA_CHANNEL_6);
     } break;
     default: {
     } break;
