@@ -32,6 +32,8 @@
 #include "param.h"
 #include "task.h"
 #include "update.h"
+#include "common.h"
+#include "bsp_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,7 +54,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+static i2c_dev *sw_i2c;
+static uint8_t i2c_buf[1280];
+static uint16_t i2c_buf_size = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,10 +103,10 @@ int main(void)
   MX_USART1_UART_Init();
   MX_IWDG_Init();
   MX_I2C1_Init();
-  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   uart_config(DEV_USART1);
   i2c_slave_config();
+  i2c_master_init();
   boot_param_check(1);
   /* USER CODE END 2 */
 
@@ -110,6 +114,39 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   sys_param_init();
   task_init();
+
+  sw_i2c = i2c_obj_find(I2C0_NAME);
+  if (sw_i2c) {
+    i2c_buf_size = 2;
+    i2c_read_multi_byte_16bit(sw_i2c, 0x3c, 0xff02, i2c_buf, i2c_buf_size);
+    for (uint16_t i = 1; i <= i2c_buf_size; ++i) {
+      printf_dbg("0x%02hhx ", i2c_buf[i - 1]);
+      if (i % 16 == 0) {
+        printf_dbg("\r\n");
+      }
+    }
+    printf_dbg("\r\n");
+
+    i2c_buf_size = 2;
+    i2c_read_multi_byte_16bit(sw_i2c, 0x3c, 0x0000, i2c_buf, i2c_buf_size);
+    for (uint16_t i = 1; i <= i2c_buf_size; ++i) {
+      printf_dbg("0x%02hhx ", i2c_buf[i - 1]);
+      if (i % 16 == 0) {
+        printf_dbg("\r\n");
+      }
+    }
+    printf_dbg("\r\n");
+
+    i2c_buf_size = 2;
+    i2c_read_multi_byte_16bit(sw_i2c, 0x3c, 0xff02, i2c_buf, i2c_buf_size);
+    for (uint16_t i = 1; i <= i2c_buf_size; ++i) {
+      printf_dbg("0x%02hhx ", i2c_buf[i - 1]);
+      if (i % 16 == 0) {
+        printf_dbg("\r\n");
+      }
+    }
+    printf_dbg("\r\n");
+  }
 
   while (1)
   {
@@ -144,6 +181,14 @@ void SystemClock_Config(void)
   {
 
   }
+  LL_RCC_HSI_Enable();
+
+   /* Wait till HSI is ready */
+  while(LL_RCC_HSI_IsReady() != 1)
+  {
+
+  }
+  LL_RCC_HSI_SetCalibTrimming(16);
   LL_RCC_LSI_Enable();
 
    /* Wait till LSI is ready */

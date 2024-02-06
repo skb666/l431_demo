@@ -66,6 +66,9 @@ void MX_GPIO_Init(void)
   LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOD);
 
   /**/
+  LL_GPIO_SetOutputPin(GPIOB, SW_I2C_SCL_Pin|SW_I2C_SDA_Pin);
+
+  /**/
   LL_GPIO_ResetOutputPin(SDMMC1_SW_GPIO_Port, SDMMC1_SW_Pin);
 
   /**/
@@ -110,6 +113,14 @@ void MX_GPIO_Init(void)
                           |LL_GPIO_PIN_15|LL_GPIO_PIN_3|LL_GPIO_PIN_5;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /**/
+  GPIO_InitStruct.Pin = SW_I2C_SCL_Pin|SW_I2C_SDA_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
   LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /**/

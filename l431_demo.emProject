@@ -38,7 +38,7 @@
       arm_target_device_name="STM32L431RC"
       arm_target_interface_type="SWD"
       c_preprocessor_definitions="ARM_MATH_CM4;STM32L431xx;__STM32L431_SUBFAMILY;__STM32L4XX_FAMILY;USE_FULL_LL_DRIVER;USE_HAL_DRIVER"
-      c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/event_button/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/uart_device/inc;$(ProjectDir)/../User/i2c_slave/inc;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc"
+      c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/event_button/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/uart_device/inc;$(ProjectDir)/../User/i2c_slave/inc;$(ProjectDir)/../User/sf_i2c/inc;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc"
       debug_register_definition_file="$(ProjectDir)/STM32L4x1_Registers.xml"
       debug_stack_pointer_start="__stack_end__"
       debug_start_from_entry_point_symbol="Yes"
@@ -131,6 +131,10 @@
       </folder>
       <folder Name="RING_FIFO">
         <file file_name="../User/RING_FIFO/src/ring_fifo.c" />
+      </folder>
+      <folder Name="sf_i2c">
+        <file file_name="../User/sf_i2c/src/bsp_i2c.c" />
+        <file file_name="../User/sf_i2c/src/sf_i2c.c" />
       </folder>
       <folder Name="task_event">
         <folder Name="app">
