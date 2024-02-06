@@ -274,12 +274,12 @@ static inline __attribute__((always_inline)) void boot_to_app(uint32_t boot_addr
   LL_SYSTICK_DisableIT();
   LL_USART_Disable(USART1);
   LL_USART_DisableIT_IDLE(USART1);
-  LL_DMA_DisableIT_HT(DMA1, LL_DMA_CHANNEL_5);
-  LL_DMA_DisableIT_TC(DMA1, LL_DMA_CHANNEL_5);
-  LL_DMA_DisableIT_TC(DMA1, LL_DMA_CHANNEL_4);
+  LL_DMA_DisableIT_HT(DMA2, LL_DMA_CHANNEL_7);
+  LL_DMA_DisableIT_TC(DMA2, LL_DMA_CHANNEL_7);
+  LL_DMA_DisableIT_TC(DMA2, LL_DMA_CHANNEL_6);
   LL_USART_DeInit(USART1);
-  LL_DMA_DeInit(DMA1, LL_DMA_CHANNEL_5);
-  LL_DMA_DeInit(DMA1, LL_DMA_CHANNEL_4);
+  LL_DMA_DeInit(DMA2, LL_DMA_CHANNEL_7);
+  LL_DMA_DeInit(DMA2, LL_DMA_CHANNEL_6);
   LL_I2C_Disable(I2C1);
   LL_I2C_DisableIT_ADDR(I2C1);
   LL_I2C_DisableIT_NACK(I2C1);
