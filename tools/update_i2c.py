@@ -3,7 +3,7 @@ import sys
 
 def usage():
     print("Usage:")
-    print(f" python {sys.argv[0]} [-d|--device <DEV>]  [-b|--baudrate <BAUD>] [-f|--file <FILE>]")
+    print(f" python {sys.argv[0]} [-d|--device <DEV>]  [-b|--baudrate <BAUD>] [-f|--file <FILE>] [-s|--slave <SLAVE_ADDR>] [-p|--bld]")
 
 if __name__ == "__main__":
     import os
@@ -123,7 +123,9 @@ if __name__ == "__main__":
         pkg_num_send = 1
         crc32_mpeg2_file.reset()
         crc32_mpeg2_pkg.reset()
-        while pkg_data_seek < file_size_real and pkg_num_send <= pkg_num_total:
+        retry = 3
+        while retry and (pkg_data_seek < file_size_real and pkg_num_send <= pkg_num_total):
+            retry -= 1
             with open(filename, 'rb') as f_obj:
                 f_obj.seek(pkg_data_seek, 0)
                 update_data = f_obj.read(data_size_one)
@@ -131,13 +133,19 @@ if __name__ == "__main__":
                 pkg_crc = crc32_mpeg2_pkg(update_data)
             data = i2c_dev_addr + i2c_reg_update_data + pkg_type_data + struct.pack('>IHH', pkg_crc, pkg_num_send, data_len) + update_data
             packed = frame_head + frame_type_i2c_write + struct.pack('>H', len(data)) + data
-            print(f"pkg_num: {pkg_num_send:03d}, pkg_crc: 0x{pkg_crc:08x}")
+            print(f"pkg_num: 0x{pkg_num_send:03x}, pkg_crc: 0x{pkg_crc:08x}")
             sercomm.write_raw(packed)
             time.sleep(1)
-            (errno, running, pkg_num) = get_update_status()
-            print(f"status: {errno}, {running}, {pkg_num:03d}\r\n")
-            time.sleep(0.2)
+            get_status_retry = 3
+            while get_status_retry:
+                get_status_retry -= 1
+                (errno, running, pkg_num) = get_update_status()
+                time.sleep(0.2)
+                if errno != 7:
+                    break
+            print(f"status: {errno}, {running}, 0x{pkg_num:03x}\r\n")
             if pkg_num == pkg_num_send:
+                retry = 3
                 crc32_mpeg2_file.accumulate(update_data)
                 pkg_num_send += 1
                 pkg_data_seek += data_len
