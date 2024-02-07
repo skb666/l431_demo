@@ -53,6 +53,9 @@ int8_t key_register(uint16_t id, KEY_VALUE (*get)(void), void *custom_data, uint
 
   key = key_find_by_id(id);
   if (key != NULL) {
+    if (key->press_cnt >= key->long_press) {
+      key->press_cnt = long_press;
+    }
     key->enable = 1;
     key->valid = valid;
     key->ageing = ageing;
