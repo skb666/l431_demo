@@ -225,6 +225,7 @@ static int8_t load_app_from_backup(void) {
     if (!err) {
       addr_read += sizeof(buf);
       addr_write += sizeof(buf);
+      LL_IWDG_ReloadCounter(IWDG);
     }
   }
 
@@ -254,6 +255,7 @@ static int8_t load_bld_from_backup(void) {
     if (!err) {
       addr_read += sizeof(buf);
       addr_write += sizeof(buf);
+      LL_IWDG_ReloadCounter(IWDG);
     }
   }
 

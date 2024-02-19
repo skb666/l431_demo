@@ -187,7 +187,7 @@ void boot_param_get(BOOT_PARAM *pdata) {
 #### 引导参数校验与修正
   
 
-![](/assets/other/9e0bf638ef74184250e742a6ab9721970.png?0.5875066329583529)  
+![](/assets/other/9e0bf638ef74184250e742a6ab9721970.png?0.3185871768661914)  
   
 主要逻辑实现如下：
   
@@ -288,6 +288,7 @@ static int8_t load_app_from_backup(void) {
     if (!err) {
       addr_read += sizeof(buf);
       addr_write += sizeof(buf);
+      LL_IWDG_ReloadCounter(IWDG);
     }
   }
   
@@ -317,6 +318,7 @@ static int8_t load_bld_from_backup(void) {
     if (!err) {
       addr_read += sizeof(buf);
       addr_write += sizeof(buf);
+      LL_IWDG_ReloadCounter(IWDG);
     }
   }
   
@@ -568,7 +570,7 @@ typedef struct {
 #### 固件传输流程
   
 
-![](/assets/other/9e0bf638ef74184250e742a6ab9721971.png?0.26278042362380205)  
+![](/assets/other/9e0bf638ef74184250e742a6ab9721971.png?0.012525890794618633)  
   
 中间 errno 获取到的值为 0 表示正常；若不为 0，根据错误码执行对应的操作
   
