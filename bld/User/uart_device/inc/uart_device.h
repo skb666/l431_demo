@@ -25,6 +25,7 @@ typedef enum {
 } DEV_TYPE;
 
 typedef struct {
+  DEV_TYPE dev_type;
   uint8_t status;
   uint8_t id;
   uint8_t byte_order;

@@ -186,8 +186,8 @@ void timer_1ms_handle(TASK *task) {
 }
 
 /* 循环任务 */
-static void print_frame_usart1(frame_parse_t *frame) {
-  uart_puts(DEV_USART1, frame->data, frame->length);
+static void print_frame_usart(frame_parse_t *frame) {
+  uart_puts(frame->dev_type, frame->data, frame->length);
 }
 
 static void system_ctrl_check(void) {
@@ -196,7 +196,7 @@ static void system_ctrl_check(void) {
 
   switch (sys->ctrl.system) {
     case SYSTEM_CTRL_REBOOT: {
-      uart_printf(DEV_USART1, "SYSTEM_CTRL_REBOOT\r\n");
+      printf_dbg("SYSTEM_CTRL_REBOOT\r\n");
       LL_mDelay(500);
       NVIC_SystemReset();
     } break;
@@ -208,7 +208,7 @@ static void system_ctrl_check(void) {
         Error_Handler();
       }
 
-      uart_printf(DEV_USART1, "SYSTEM_CTRL_UPDATE_START\r\n");
+      printf_dbg("SYSTEM_CTRL_UPDATE_START\r\n");
       NVIC_SystemReset();
     } break;
     default: {
@@ -217,7 +217,7 @@ static void system_ctrl_check(void) {
 }
 
 void main_loop_init(void) {
-  frame_parse_register(DEV_USART1, FRAME_TYPE_DEBUG, print_frame_usart1);
+  frame_parse_register(DEV_USART1, FRAME_TYPE_DEBUG, print_frame_usart);
   frame_parse_register(DEV_USART1, FRAME_TYPE_I2C_WRITE, uart_frame_i2c_write);
   frame_parse_register(DEV_USART1, FRAME_TYPE_I2C_READ, uart_frame_i2c_read);
   frame_parse_register(DEV_USART1, FRAME_TYPE_SYSTEM_CTRL, system_ctrl_frame_parse);

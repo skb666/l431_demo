@@ -99,6 +99,7 @@ void uart_config(DEV_TYPE dev_type) {
   // 默认按大端方式传输数据
   rx_frame[dev_type].byte_order = 1;
   rx_frame[dev_type].data = __frame_data[dev_type];
+  rx_frame[dev_type].dev_type = dev_type;
 }
 
 void uart_set_rx_monitor(DEV_TYPE dev_type, void (*monitor)(uint8_t *, uint16_t)) {
