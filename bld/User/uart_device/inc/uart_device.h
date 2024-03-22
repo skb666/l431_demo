@@ -50,8 +50,11 @@ void uart_tx_poll(DEV_TYPE dev_type);
 uint16_t uart_read(DEV_TYPE dev_type, uint8_t *buf, uint16_t size);
 uint16_t uart_write(DEV_TYPE dev_type, const uint8_t *buf, uint16_t size);
 
+void uart_printf_wait(DEV_TYPE dev_type, const char *format, ...);
+void uart_puts_wait(DEV_TYPE dev_type, uint8_t *buf, uint16_t len);
 void uart_printf(DEV_TYPE dev_type, const char *format, ...);
 void uart_puts(DEV_TYPE dev_type, uint8_t *buf, uint16_t len);
+void uart_printf_block(DEV_TYPE dev_type, const char *format, ...);
 
 #ifdef __cplusplus
 }

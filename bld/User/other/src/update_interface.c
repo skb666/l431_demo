@@ -15,7 +15,7 @@ void update_status_get(frame_parse_t *frame) {
   if (frame->byte_order) {
     change_byte_order(&update_status, sizeof(update_status));
   }
-  uart_puts(frame->dev_type, (uint8_t *)&update_status, sizeof(update_status));
+  uart_puts_wait(frame->dev_type, (uint8_t *)&update_status, sizeof(update_status));
 }
 
 void update_frame_parse(frame_parse_t *frame) {

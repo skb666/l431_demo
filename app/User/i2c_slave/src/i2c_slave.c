@@ -14,9 +14,9 @@ typedef enum {
 } I2C_SLAVE_STATUS;
 
 typedef struct {
-  I2C_SLAVE_STATUS status;
+  volatile I2C_SLAVE_STATUS status;
   uint16_t reg_addr_size;
-  REG_ADDR_TYPE reg_addr;
+  volatile REG_ADDR_TYPE reg_addr;
   RING_FIFO rx_ring;
   RING_FIFO tx_ring;
 } i2c_device_t;

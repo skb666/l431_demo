@@ -110,5 +110,5 @@ void uart_frame_i2c_read(frame_parse_t *frame) {
   i2c_buf_size = data_len;
   i2c_master_read_reg(dev_addr, reg_addr, i2c_buf, i2c_buf_size);
 
-  uart_puts(frame->dev_type, i2c_buf, i2c_buf_size);
+  uart_puts_wait(frame->dev_type, i2c_buf, i2c_buf_size);
 }

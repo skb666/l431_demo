@@ -187,7 +187,7 @@ void timer_1ms_handle(TASK *task) {
 
 /* 循环任务 */
 static void print_frame_usart(frame_parse_t *frame) {
-  uart_puts(frame->dev_type, frame->data, frame->length);
+  uart_puts_wait(frame->dev_type, frame->data, frame->length);
 }
 
 static void system_ctrl_check(void) {

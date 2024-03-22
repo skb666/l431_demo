@@ -15,8 +15,8 @@ typedef enum {
 } FRAME_PARSE_STAT;
 
 typedef struct {
-  volatile uint16_t status; /* 发送状态 */
-  uint16_t last_dmarx_size; /* dma上一次接收数据大小 */
+  volatile uint16_t status;          /* 发送状态 */
+  volatile uint16_t last_dmarx_size; /* dma上一次接收数据大小 */
   RING_FIFO rx_ring;
   RING_FIFO tx_ring;
   void (*rx_monitor)(uint8_t *, uint16_t);
@@ -339,7 +339,7 @@ void uart_frame_parse(DEV_TYPE dev_type) {
   }
 }
 
-void uart_printf(DEV_TYPE dev_type, const char *format, ...) {
+void uart_printf_wait(DEV_TYPE dev_type, const char *format, ...) {
   va_list args;
   uint32_t length;
   uint16_t success = 0;
@@ -365,7 +365,7 @@ void uart_printf(DEV_TYPE dev_type, const char *format, ...) {
   } while (length);
 }
 
-void uart_puts(DEV_TYPE dev_type, uint8_t *buf, uint16_t len) {
+void uart_puts_wait(DEV_TYPE dev_type, uint8_t *buf, uint16_t len) {
   uint16_t success = 0;
   uint8_t *pbuf;
 
@@ -383,4 +383,41 @@ void uart_puts(DEV_TYPE dev_type, uint8_t *buf, uint16_t len) {
     pbuf += success;
     len -= success;
   } while (len);
+}
+
+void uart_printf(DEV_TYPE dev_type, const char *format, ...) {
+  va_list args;
+  uint32_t length;
+
+  va_start(args, format);
+  length = vsnprintf((char *)print_buf, UART_TX_RING_SIZE, (char *)format, args);
+  va_end(args);
+
+  uart_write(dev_type, print_buf, length);
+}
+
+void uart_puts(DEV_TYPE dev_type, uint8_t *buf, uint16_t len) {
+  uart_write(dev_type, buf, len);
+}
+
+void uart_printf_block(DEV_TYPE dev_type, const char *format, ...) {
+  va_list args;
+  uint32_t length;
+
+  va_start(args, format);
+  length = vsnprintf((char *)print_buf, UART_TX_RING_SIZE, (char *)format, args);
+  va_end(args);
+
+  switch (dev_type) {
+    case DEV_USART1: {
+      for (int i = 0; i < length; ++i) {
+        while (LL_USART_IsActiveFlag_TC(USART1) != 1) {
+          // 等待发送完成
+        }
+        LL_USART_TransmitData8(USART1, print_buf[i]);  // 发送数据
+      }
+    } break;
+    default: {
+    } break;
+  }
 }

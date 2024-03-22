@@ -203,13 +203,15 @@ static int8_t boot_param_get_with_check(BOOT_PARAM *pdata) {
 
 #ifdef PROGRAM_BLD
 static int8_t load_app_from_backup(void) {
-  uint64_t buf[256];
+  static uint64_t buf[256] = {0};
   int8_t err = 0;
   uint32_t addr_read = ADDR_BASE_BACKUP;
   uint32_t addr_write = ADDR_BASE_APP;
   uint32_t load_size = PART_SIZE_APP;
   uint32_t addr_write_end = addr_write + load_size;
 
+  printf_dbg("load app from backup...\r\n");
+
   disable_global_irq();
   err = STMFLASH_Erase(addr_write, load_size, 1);
   enable_global_irq();
@@ -218,9 +220,9 @@ static int8_t load_app_from_backup(void) {
   }
 
   while (addr_write < addr_write_end) {
-    (void)STMFLASH_Read(addr_read, buf, sizeof(buf) >> 3);
+    err |= STMFLASH_Read(addr_read, buf, sizeof(buf) >> 3);
     disable_global_irq();
-    err = STMFLASH_Write(addr_write, buf, sizeof(buf) >> 3);
+    err |= STMFLASH_Write(addr_write, buf, sizeof(buf) >> 3);
     enable_global_irq();
     if (!err) {
       addr_read += sizeof(buf);
@@ -229,17 +231,21 @@ static int8_t load_app_from_backup(void) {
     }
   }
 
+  printf_dbg("load app Ok\r\n");
+
   return 0;
 }
 #else
 static int8_t load_bld_from_backup(void) {
-  uint64_t buf[256];
+  static uint64_t buf[256] = {0};
   int8_t err = 0;
   uint32_t addr_read = ADDR_BASE_BACKUP;
   uint32_t addr_write = ADDR_BASE_BLD;
   uint32_t load_size = PART_SIZE_BLD;
   uint32_t addr_write_end = addr_write + load_size;
 
+  printf_dbg("load bld from backup...\r\n");
+
   disable_global_irq();
   err = STMFLASH_Erase(addr_write, load_size, 1);
   enable_global_irq();
@@ -248,9 +254,9 @@ static int8_t load_bld_from_backup(void) {
   }
 
   while (addr_write < addr_write_end) {
-    (void)STMFLASH_Read(addr_read, buf, sizeof(buf) >> 3);
+    err |= STMFLASH_Read(addr_read, buf, sizeof(buf) >> 3);
     disable_global_irq();
-    err = STMFLASH_Write(addr_write, buf, sizeof(buf) >> 3);
+    err |= STMFLASH_Write(addr_write, buf, sizeof(buf) >> 3);
     enable_global_irq();
     if (!err) {
       addr_read += sizeof(buf);
@@ -258,6 +264,8 @@ static int8_t load_bld_from_backup(void) {
       LL_IWDG_ReloadCounter(IWDG);
     }
   }
+
+  printf_dbg("load bld Ok\r\n");
 
   return 0;
 }
@@ -404,7 +412,7 @@ void boot_param_check(uint8_t with_check) {
 
   /* 引导到 APP */
   boot_to_app(ADDR_BASE_APP);
-  printf_dbg("ERROR: boot to app\r\n");
+  printf_dbg("boot to app Fail\r\n");
 
   /* 引导失败，进入升级 */
   param.update_needed = 1;
