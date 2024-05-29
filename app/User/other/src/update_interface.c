@@ -44,9 +44,15 @@ void update_frame_parse(frame_parse_t *frame) {
   }
 
   switch (g_update_pkg.type) {
-    case PKG_TYPE_INIT:
-    case PKG_TYPE_FINISH: {
+    case PKG_TYPE_INIT: {
+      if (frame_length != sizeof(PKG_INIT)) {
+        return;
+      }
       memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
+      memcpy(&g_update_pkg.init, frame_data, frame_length);
+      if (frame->byte_order) {
+        change_byte_order(&g_update_pkg.init.partition_type, sizeof(g_update_pkg.init.partition_type));
+      }
     } break;
     case PKG_TYPE_HEAD: {
       if (frame_length != sizeof(PKG_HEAD)) {
@@ -55,7 +61,6 @@ void update_frame_parse(frame_parse_t *frame) {
       memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
       memcpy(&g_update_pkg.head, frame_data, frame_length);
       if (frame->byte_order) {
-        change_byte_order(&g_update_pkg.head.partition_type, sizeof(g_update_pkg.head.partition_type));
         change_byte_order(&g_update_pkg.head.file_crc, sizeof(g_update_pkg.head.file_crc));
         change_byte_order(&g_update_pkg.head.file_size_real, sizeof(g_update_pkg.head.file_size_real));
         change_byte_order(&g_update_pkg.head.data_size_one, sizeof(g_update_pkg.head.data_size_one));
@@ -73,6 +78,9 @@ void update_frame_parse(frame_parse_t *frame) {
         change_byte_order(&g_update_pkg.data.pkg_num, sizeof(g_update_pkg.data.pkg_num));
         change_byte_order(&g_update_pkg.data.data_len, sizeof(g_update_pkg.data.data_len));
       }
+    } break;
+    case PKG_TYPE_FINISH: {
+      memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
     } break;
     default: {
       return;

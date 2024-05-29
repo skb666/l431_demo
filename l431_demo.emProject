@@ -8,6 +8,7 @@
     gcc_c_language_standard="gnu11"
     gcc_cplusplus_language_standard="gnu++14"
     gcc_optimization_level="Level 2 for size"
+    link_time_optimization="Yes"
     speed="4000"
     target_interface_type="SWD" />
   <configuration
@@ -37,7 +38,7 @@
       arm_simulator_memory_simulation_parameter="ROM;0x08000000;0x00040000;RAM;0x10000000;0x00004000;RAM;0x20000000;0x0000C000"
       arm_target_device_name="STM32L431RC"
       arm_target_interface_type="SWD"
-      c_preprocessor_definitions="ARM_MATH_CM4;STM32L431xx;__STM32L431_SUBFAMILY;__STM32L4XX_FAMILY;USE_FULL_LL_DRIVER;USE_HAL_DRIVER"
+      c_preprocessor_definitions="ARM_MATH_CM4;STM32L431xx;__STM32L431_SUBFAMILY;__STM32L4XX_FAMILY;USE_FULL_LL_DRIVER;USE_HAL_DRIVER;USING_UPDATE_BACKUP_IN_APP"
       c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/event_button/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/uart_device/inc;$(ProjectDir)/../User/i2c_slave/inc;$(ProjectDir)/../User/sf_i2c/inc;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc"
       debug_register_definition_file="$(ProjectDir)/STM32L4x1_Registers.xml"
       debug_stack_pointer_start="__stack_end__"
@@ -175,7 +176,7 @@
       arm_simulator_memory_simulation_parameter="ROM;0x08000000;0x00040000;RAM;0x10000000;0x00004000;RAM;0x20000000;0x0000C000"
       arm_target_device_name="STM32L431RC"
       arm_target_interface_type="SWD"
-      c_preprocessor_definitions="ARM_MATH_CM4;STM32L431xx;__STM32L431_SUBFAMILY;__STM32L4XX_FAMILY;USE_FULL_LL_DRIVER;USE_HAL_DRIVER"
+      c_preprocessor_definitions="ARM_MATH_CM4;STM32L431xx;__STM32L431_SUBFAMILY;__STM32L4XX_FAMILY;USE_FULL_LL_DRIVER;USE_HAL_DRIVER;PROGRAM_BLD;USING_UPDATE_BACKUP_OVERWRITE"
       c_user_include_directories="$(ProjectDir)/../Core/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc;$(ProjectDir)/../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;$(ProjectDir)/../Drivers/CMSIS/Device/ST/STM32L4xx/Include;$(ProjectDir)/../Drivers/CMSIS/Include;$(ProjectDir)/../User/RING_FIFO/inc;$(ProjectDir)/../User/FLASH/inc;$(ProjectDir)/../User/libcrc/crc32_mpeg2;$(ProjectDir)/../User/uart_device/inc;$(ProjectDir)/../User/i2c_slave/inc;$(ProjectDir)/../User/task_event/core/inc;$(ProjectDir)/../User/task_event/user/inc;$(ProjectDir)/../User/other/inc"
       debug_register_definition_file="$(ProjectDir)/STM32L4x1_Registers.xml"
       debug_stack_pointer_start="__stack_end__"
@@ -190,6 +191,7 @@
       macros="DeviceHeaderFile=$(PackagesDir)/STM32L4xx/Device/Include/stm32l4xx.h;DeviceSystemFile=$(PackagesDir)/STM32L4xx/Device/Source/system_stm32l4xx.c;DeviceVectorsFile=$(PackagesDir)/STM32L4xx/Source/stm32l431xx_Vectors.s;DeviceFamily=STM32L4xx;DeviceSubFamily=STM32L431;Target=STM32L431RCTx"
       project_directory="bld/emStudio"
       project_type="Executable"
+      speed="4000"
       target_reset_script="Reset();" />
     <folder Name="Core">
       <file file_name="../Core/Src/common.c" />

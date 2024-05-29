@@ -66,9 +66,13 @@ void reg_write_cb_update_data(void) {
   I2C_GET_NUM(uint16_t, g_update_pkg.type);
 
   switch (g_update_pkg.type) {
-    case PKG_TYPE_INIT:
-    case PKG_TYPE_FINISH: {
+    case PKG_TYPE_INIT: {
+      if (i2c_slave_rx_size() != sizeof(PKG_INIT)) {
+        return;
+      }
       memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
+      i2c_slave_rx_get((uint8_t *)&g_update_pkg.init, i2c_slave_rx_size());
+      change_byte_order(&g_update_pkg.init.partition_type, sizeof(g_update_pkg.init.partition_type));
     } break;
     case PKG_TYPE_HEAD: {
       if (i2c_slave_rx_size() != sizeof(PKG_HEAD)) {
@@ -76,7 +80,6 @@ void reg_write_cb_update_data(void) {
       }
       memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
       i2c_slave_rx_get((uint8_t *)&g_update_pkg.head, i2c_slave_rx_size());
-      change_byte_order(&g_update_pkg.head.partition_type, sizeof(g_update_pkg.head.partition_type));
       change_byte_order(&g_update_pkg.head.file_crc, sizeof(g_update_pkg.head.file_crc));
       change_byte_order(&g_update_pkg.head.file_size_real, sizeof(g_update_pkg.head.file_size_real));
       change_byte_order(&g_update_pkg.head.data_size_one, sizeof(g_update_pkg.head.data_size_one));
@@ -91,6 +94,9 @@ void reg_write_cb_update_data(void) {
       change_byte_order(&g_update_pkg.data.pkg_crc, sizeof(g_update_pkg.data.pkg_crc));
       change_byte_order(&g_update_pkg.data.pkg_num, sizeof(g_update_pkg.data.pkg_num));
       change_byte_order(&g_update_pkg.data.data_len, sizeof(g_update_pkg.data.data_len));
+    } break;
+    case PKG_TYPE_FINISH: {
+      memset(&g_update_pkg.data, 0xFF, sizeof(PKG_DATA));
     } break;
     default: {
       return;

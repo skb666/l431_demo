@@ -58,6 +58,12 @@ static UPDATE_INFO s_update_info;
 static BOOT_PARAM boot_param_default = {
     .update_needed = 0,
     .app_status = STATUS_BOOT,
+#if defined(USING_UPDATE_BACKUP_IN_BLD) || defined(USING_UPDATE_BACKUP_IN_APP)
+    .update_type = UPDATE_BACKUP,
+#else
+    .update_type = UPDATE_OVERWRITE,
+#endif
+    .from_app = 0,
     .back_to_app = 0,
 };
 const uint32_t boot_param_size64 = (sizeof(BOOT_PARAM) >> 3) + !!(sizeof(BOOT_PARAM) % 8);
@@ -151,7 +157,7 @@ void boot_param_get(BOOT_PARAM *pdata) {
   (void)STMFLASH_Read(ADDR_BASE_PARAM, (uint64_t *)pdata, boot_param_size64);
 }
 
-static int8_t boot_param_get_with_check(BOOT_PARAM *pdata) {
+int8_t boot_param_get_with_check(BOOT_PARAM *pdata) {
   BOOT_PARAM param, param_bak;
 
   (void)STMFLASH_Read(ADDR_BASE_PARAM, (uint64_t *)&param, boot_param_size64);
@@ -201,6 +207,7 @@ static int8_t boot_param_get_with_check(BOOT_PARAM *pdata) {
   return 0;
 }
 
+#ifdef UPDATE_SUPPORT_BACKUP
 #ifdef PROGRAM_BLD
 static int8_t load_app_from_backup(void) {
   static uint64_t buf[256] = {0};
@@ -235,7 +242,7 @@ static int8_t load_app_from_backup(void) {
 
   return 0;
 }
-#else
+#else  /* PROGRAM_BLD */
 static int8_t load_bld_from_backup(void) {
   static uint64_t buf[256] = {0};
   int8_t err = 0;
@@ -269,7 +276,8 @@ static int8_t load_bld_from_backup(void) {
 
   return 0;
 }
-#endif
+#endif /* PROGRAM_BLD */
+#endif /* UPDATE_SUPPORT_BACKUP */
 
 #ifdef PROGRAM_BLD
 static inline __attribute__((always_inline)) void boot_to_app(uint32_t boot_addr) {
@@ -308,7 +316,44 @@ static inline __attribute__((always_inline)) void boot_to_app(uint32_t boot_addr
   __set_MSP(MspAddress);
   JumpToApplication();
 }
-#endif
+#else  /* PROGRAM_BLD */
+inline __attribute__((always_inline)) void boot_to_bld(uint32_t boot_addr) {
+  MspAddress = STMFLASH_ReadWord(boot_addr);
+  JumpAddress = STMFLASH_ReadWord(boot_addr + 4);
+  JumpToApplication = (pFunction)JumpAddress;
+
+  if ((MspAddress & 0xFFFF8000) != 0x10000000 && (MspAddress & 0xFFFF0000) != 0x20000000) {
+    return;
+  }
+
+  LL_SYSTICK_DisableIT();
+  LL_USART_Disable(USART1);
+  LL_USART_DisableIT_IDLE(USART1);
+  LL_DMA_DisableIT_HT(DMA2, LL_DMA_CHANNEL_7);
+  LL_DMA_DisableIT_TC(DMA2, LL_DMA_CHANNEL_7);
+  LL_DMA_DisableIT_TC(DMA2, LL_DMA_CHANNEL_6);
+  LL_USART_DeInit(USART1);
+  LL_DMA_DeInit(DMA2, LL_DMA_CHANNEL_7);
+  LL_DMA_DeInit(DMA2, LL_DMA_CHANNEL_6);
+  LL_I2C_Disable(I2C1);
+  LL_I2C_DisableIT_ADDR(I2C1);
+  LL_I2C_DisableIT_NACK(I2C1);
+  LL_I2C_DisableIT_ERR(I2C1);
+  LL_I2C_DisableIT_STOP(I2C1);
+  LL_I2C_DisableIT_RX(I2C1);
+  LL_I2C_DisableIT_TX(I2C1);
+  LL_I2C_DeInit(I2C1);
+  HAL_CRC_DeInit(&hcrc);
+  // HAL_DeInit();
+
+  SCB->VTOR = boot_addr;
+
+  __set_CONTROL(0);
+  __set_PSP(MspAddress);
+  __set_MSP(MspAddress);
+  JumpToApplication();
+}
+#endif /* PROGRAM_BLD */
 
 void boot_param_check(uint8_t with_check) {
   BOOT_PARAM param;
@@ -322,6 +367,12 @@ void boot_param_check(uint8_t with_check) {
   }
 
   if (SCB->VTOR == ADDR_BASE_APP) {
+#if defined(USING_UPDATE_OVERWRITE) || defined(USING_UPDATE_BACKUP_OVERWRITE)
+    param.update_type = UPDATE_OVERWRITE;
+#elif defined(USING_UPDATE_BACKUP_IN_BLD) || defined(USING_UPDATE_BACKUP_IN_APP)
+    param.update_type = UPDATE_BACKUP;
+#else
+#endif
     param.update_needed = 0;
     param.app_status = STATUS_NORM;
     param.back_to_app = 1;
@@ -340,6 +391,7 @@ void boot_param_check(uint8_t with_check) {
       /* 默认状态，尝试引导 */
       case STATUS_BOOT: {
         param.update_needed = 1;
+        param.from_app = 0;
         param.back_to_app = 0;
         if (boot_param_update(&param)) {
           Error_Handler();
@@ -355,6 +407,7 @@ void boot_param_check(uint8_t with_check) {
       default: {
         param.update_needed = 1;
         param.app_status = STATUS_NONE;
+        param.from_app = 0;
         param.back_to_app = 0;
         if (boot_param_update(&param)) {
           Error_Handler();
@@ -364,43 +417,77 @@ void boot_param_check(uint8_t with_check) {
     }
   } else {
     switch (param.app_status) {
+      /* 正常状态，进入升级 */
+      case STATUS_NORM: {
+        if (!param.from_app) {
+          return;
+        }
+        param.from_app = 0;
+        if (boot_param_update(&param)) {
+          Error_Handler();
+        }
+        return;
+      } break;
+#ifdef UPDATE_SUPPORT_BACKUP
       /* 升级过程中断电 */
       case STATUS_RECV: {
-        if (param.back_to_app) {
-          /* 引导升级前的 APP */
-          param.app_status = STATUS_BOOT;
-          if (boot_param_update(&param)) {
-            Error_Handler();
-          }
-        } else {
-          /* 进入升级 */
+        if (param.update_type == UPDATE_OVERWRITE) {
           param.app_status = STATUS_NONE;
+          param.from_app = 0;
+          param.back_to_app = 0;
           if (boot_param_update(&param)) {
             Error_Handler();
           }
           return;
+        } else {
+          if (param.back_to_app) {
+            /* 引导升级前的 APP */
+            param.app_status = STATUS_BOOT;
+            if (boot_param_update(&param)) {
+              Error_Handler();
+            }
+          } else {
+            /* 进入升级 */
+            param.app_status = STATUS_NONE;
+            if (boot_param_update(&param)) {
+              Error_Handler();
+            }
+            return;
+          }
         }
       } break;
       /* 加载程序时断电，程序加载后引导 */
       case STATUS_LOAD: {
-        if (load_app_from_backup()) {
-          Error_Handler();
-        }
-        param.app_status = STATUS_BOOT;
-        param.back_to_app = 0;
-        if (boot_param_update(&param)) {
-          Error_Handler();
+        if (param.update_type == UPDATE_OVERWRITE) {
+          param.app_status = STATUS_NONE;
+          param.from_app = 0;
+          param.back_to_app = 0;
+          if (boot_param_update(&param)) {
+            Error_Handler();
+          }
+          return;
+        } else {
+          if (load_app_from_backup()) {
+            Error_Handler();
+          }
+          param.app_status = STATUS_BOOT;
+          param.from_app = 0;
+          param.back_to_app = 0;
+          if (boot_param_update(&param)) {
+            Error_Handler();
+          }
         }
       } break;
-      /* 正常状态，进入升级 */
-      case STATUS_NORM: {
-        return;
-      } break;
+#else  /* UPDATE_SUPPORT_BACKUP */
+      case STATUS_RECV:
+      case STATUS_LOAD:
+#endif /* UPDATE_SUPPORT_BACKUP */
       /* 异常状态，进入升级 */
       case STATUS_BOOT:
       case STATUS_NONE:
       default: {
         param.app_status = STATUS_NONE;
+        param.from_app = 0;
         param.back_to_app = 0;
         if (boot_param_update(&param)) {
           Error_Handler();
@@ -417,26 +504,76 @@ void boot_param_check(uint8_t with_check) {
   /* 引导失败，进入升级 */
   param.update_needed = 1;
   param.app_status = STATUS_NONE;
+  param.from_app = 0;
   param.back_to_app = 0;
   if (boot_param_update(&param)) {
     Error_Handler();
   }
-#endif
+#endif /* PROGRAM_BLD */
 }
 
 static void update_init(SYS_PARAM *sys) {
   int8_t err = 0;
   UPDATE_STATUS status;
+  uint32_t partition_type;
 
   sys->ctrl.update.stage = UPDATE_BEGIN;
   sys->ctrl.update.status = 0x1FFF;
   /* 清零升级过程数据 */
+  partition_type = s_update_info.partition_type;
   memset(&s_update_info, 0, sizeof(s_update_info));
   (void)CRC_OPT(crc32_mpeg2, init)(&s_update_info.crc);
   boot_param_get(&s_update_info.boot_param);
+  s_update_info.partition_type = partition_type;
+  /* 检查升级分区类型 */
+  switch (s_update_info.partition_type) {
+#ifdef PROGRAM_BLD
+    case PARTITION_APP: {
+    } break;
+#else /* PROGRAM_BLD */
+#ifdef UPDATE_SUPPORT_BACKUP
+    case PARTITION_APP: {
+      if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+        memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+        status.errno = ERRNO_PARTITION;
+        memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+        return;
+      }
+    } break;
+#endif /* UPDATE_SUPPORT_BACKUP */
+    case PARTITION_BLD: {
+    } break;
+#endif /* PROGRAM_BLD */
+    default: {
+      memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+      status.errno = ERRNO_PARTITION;
+      memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+      return;
+    } break;
+  }
   /* 擦除 APP 接收区域 */
   disable_global_irq();
-  err = STMFLASH_Erase(ADDR_BASE_BACKUP, PART_SIZE_APP, 1);
+#ifdef PROGRAM_BLD
+#ifdef UPDATE_SUPPORT_BACKUP
+  if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+    err = STMFLASH_Erase(ADDR_BASE_APP, (PART_SIZE_APP << 1), 1);
+  } else {
+    err = STMFLASH_Erase(ADDR_BASE_BACKUP, PART_SIZE_APP, 1);
+  }
+#else  /* UPDATE_SUPPORT_BACKUP */
+  err = STMFLASH_Erase(ADDR_BASE_APP, PART_SIZE_APP, 1);
+#endif /* UPDATE_SUPPORT_BACKUP */
+#else  /* PROGRAM_BLD */
+#ifdef UPDATE_SUPPORT_BACKUP
+  if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+    err = STMFLASH_Erase(ADDR_BASE_BLD, PART_SIZE_BLD, 1);
+  } else {
+    err = STMFLASH_Erase(ADDR_BASE_BACKUP, PART_SIZE_APP, 1);
+  }
+#else  /* UPDATE_SUPPORT_BACKUP */
+  err = STMFLASH_Erase(ADDR_BASE_BLD, PART_SIZE_BLD, 1);
+#endif /* UPDATE_SUPPORT_BACKUP */
+#endif /* PROGRAM_BLD */
   enable_global_irq();
   if (err) {
     /* 理论上不应该发生 */
@@ -467,6 +604,7 @@ void update_pkg_process(void) {
     case UPDATE_WAITTING: {
       switch (g_update_pkg.type) {
         case PKG_TYPE_INIT: {
+          memcpy(&s_update_info.partition_type, &g_update_pkg.init.partition_type, sizeof(s_update_info.partition_type));
           update_init(sys);
         } break;
         case PKG_TYPE_HEAD:
@@ -481,30 +619,15 @@ void update_pkg_process(void) {
     case UPDATE_BEGIN: {
       switch (g_update_pkg.type) {
         case PKG_TYPE_INIT: {
+          memcpy(&s_update_info.partition_type, &g_update_pkg.init.partition_type, sizeof(s_update_info.partition_type));
           update_init(sys);
         } break;
         case PKG_TYPE_HEAD: {
           sys->ctrl.update.status = 0x1000;
-          memcpy(&s_update_info.partition_type, &g_update_pkg.head.partition_type, sizeof(s_update_info.partition_type));
           memcpy(&s_update_info.file_crc, &g_update_pkg.head.file_crc, sizeof(s_update_info.file_crc));
           memcpy(&s_update_info.file_size_real, &g_update_pkg.head.file_size_real, sizeof(s_update_info.file_size_real));
           memcpy(&s_update_info.data_size_one, &g_update_pkg.head.data_size_one, sizeof(s_update_info.data_size_one));
           memcpy(&s_update_info.pkg_num_total, &g_update_pkg.head.pkg_num_total, sizeof(s_update_info.pkg_num_total));
-          /* 检查升级分区类型 */
-          switch (s_update_info.partition_type) {
-#ifndef PROGRAM_BLD
-            case PARTITION_BLD: {
-            } break;
-#endif
-            case PARTITION_APP: {
-            } break;
-            default: {
-              memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
-              status.errno = ERRNO_PARTITION;
-              memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
-              goto LABEL_PROCESS_EXIT;
-            } break;
-          }
           /* 检查升级包数量 */
           if (s_update_info.pkg_num_total >= 0xFFE) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
@@ -513,36 +636,73 @@ void update_pkg_process(void) {
             break;
           }
           /* 检查数据长度 */
-#ifndef PROGRAM_BLD
-          if (s_update_info.partition_type == PARTITION_BLD) {
-            if ((s_update_info.file_size_real > PART_SIZE_BLD) ||
-                (s_update_info.data_size_one > UPDATE_PACKAGE_MAX_SIZE) ||
-                (s_update_info.data_size_one % 8)) {
-              memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
-              status.errno = ERRNO_DATA_SIZE;
-              memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
-              break;
-            }
-          } else {
-            if ((s_update_info.file_size_real > PART_SIZE_APP) ||
-                (s_update_info.data_size_one > UPDATE_PACKAGE_MAX_SIZE) ||
-                (s_update_info.data_size_one % 8)) {
-              memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
-              status.errno = ERRNO_DATA_SIZE;
-              memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
-              break;
-            }
-          }
-#else
-          if ((s_update_info.file_size_real > PART_SIZE_APP) ||
-              (s_update_info.data_size_one > UPDATE_PACKAGE_MAX_SIZE) ||
+          if ((s_update_info.data_size_one > UPDATE_PACKAGE_MAX_SIZE) ||
               (s_update_info.data_size_one % 8)) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_DATA_SIZE;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
             break;
           }
-#endif
+#ifdef PROGRAM_BLD
+#ifdef UPDATE_SUPPORT_BACKUP
+          if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+            if (s_update_info.file_size_real > (PART_SIZE_APP << 1)) {
+              memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+              status.errno = ERRNO_DATA_SIZE;
+              memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+              break;
+            }
+          } else {
+            if (s_update_info.file_size_real > PART_SIZE_APP) {
+              memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+              status.errno = ERRNO_DATA_SIZE;
+              memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+              break;
+            }
+          }
+#else  /* UPDATE_SUPPORT_BACKUP */
+          if (s_update_info.file_size_real > PART_SIZE_APP) {
+            memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+            status.errno = ERRNO_DATA_SIZE;
+            memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+            break;
+          }
+#endif /* UPDATE_SUPPORT_BACKUP */
+#else  /* PROGRAM_BLD */
+#ifdef UPDATE_SUPPORT_BACKUP
+          if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+            if (s_update_info.file_size_real > PART_SIZE_BLD) {
+              memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+              status.errno = ERRNO_DATA_SIZE;
+              memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+              break;
+            }
+          } else {
+            if (s_update_info.partition_type == PARTITION_BLD) {
+              if (s_update_info.file_size_real > PART_SIZE_BLD) {
+                memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+                status.errno = ERRNO_DATA_SIZE;
+                memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+                break;
+              }
+            } else {
+              if (s_update_info.file_size_real > PART_SIZE_APP) {
+                memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+                status.errno = ERRNO_DATA_SIZE;
+                memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+                break;
+              }
+            }
+          }
+#else  /* UPDATE_SUPPORT_BACKUP */
+          if (s_update_info.file_size_real > PART_SIZE_BLD) {
+            memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+            status.errno = ERRNO_DATA_SIZE;
+            memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+            break;
+          }
+#endif /* UPDATE_SUPPORT_BACKUP */
+#endif /* PROGRAM_BLD */
           /* 更新引导参数 */
           s_update_info.boot_param.update_needed = 1;
           s_update_info.boot_param.app_status = STATUS_RECV;
@@ -567,6 +727,7 @@ void update_pkg_process(void) {
     case UPDATE_TRANSMIT: {
       switch (g_update_pkg.type) {
         case PKG_TYPE_INIT: {
+          memcpy(&s_update_info.partition_type, &g_update_pkg.init.partition_type, sizeof(s_update_info.partition_type));
           update_init(sys);
         } break;
         case PKG_TYPE_DATA: {
@@ -599,9 +760,39 @@ void update_pkg_process(void) {
           }
           /* 向 Flash 写入数据 */
           disable_global_irq();
-          err = STMFLASH_Write((ADDR_BASE_BACKUP + s_update_info.recv_len),
+#ifdef PROGRAM_BLD
+#ifdef UPDATE_SUPPORT_BACKUP
+          if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+            err = STMFLASH_Write((ADDR_BASE_APP + s_update_info.recv_len),
+                (uint64_t *)g_update_pkg.data.data,
+                ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+          } else {
+            err = STMFLASH_Write((ADDR_BASE_BACKUP + s_update_info.recv_len),
+                (uint64_t *)g_update_pkg.data.data,
+                ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+          }
+#else  /* UPDATE_SUPPORT_BACKUP */
+          err = STMFLASH_Write((ADDR_BASE_APP + s_update_info.recv_len),
               (uint64_t *)g_update_pkg.data.data,
               ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+#endif /* UPDATE_SUPPORT_BACKUP */
+#else  /* PROGRAM_BLD */
+#ifdef UPDATE_SUPPORT_BACKUP
+          if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+            err = STMFLASH_Write((ADDR_BASE_BLD + s_update_info.recv_len),
+                (uint64_t *)g_update_pkg.data.data,
+                ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+          } else {
+            err = STMFLASH_Write((ADDR_BASE_BACKUP + s_update_info.recv_len),
+                (uint64_t *)g_update_pkg.data.data,
+                ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+          }
+#else  /* UPDATE_SUPPORT_BACKUP */
+          err = STMFLASH_Write((ADDR_BASE_BLD + s_update_info.recv_len),
+              (uint64_t *)g_update_pkg.data.data,
+              ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+#endif /* UPDATE_SUPPORT_BACKUP */
+#endif /* PROGRAM_BLD */
           enable_global_irq();
           if (err) {
             /* 理论上不应该发生 */
@@ -639,47 +830,49 @@ void update_pkg_process(void) {
             break;
           }
           /* 校验升级包是否可被引导 */
-          msp_addr = STMFLASH_ReadWord(ADDR_BASE_BACKUP);
+#ifdef PROGRAM_BLD
+#ifdef UPDATE_SUPPORT_BACKUP
+          if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+            msp_addr = STMFLASH_ReadWord(ADDR_BASE_APP);
+          } else {
+            msp_addr = STMFLASH_ReadWord(ADDR_BASE_BACKUP);
+          }
+#else  /* UPDATE_SUPPORT_BACKUP */
+          msp_addr = STMFLASH_ReadWord(ADDR_BASE_APP);
+#endif /* UPDATE_SUPPORT_BACKUP */
+#else  /* PROGRAM_BLD */
+#ifdef UPDATE_SUPPORT_BACKUP
+          if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+            msp_addr = STMFLASH_ReadWord(ADDR_BASE_BLD);
+          } else {
+            msp_addr = STMFLASH_ReadWord(ADDR_BASE_BACKUP);
+          }
+#else  /* UPDATE_SUPPORT_BACKUP */
+          msp_addr = STMFLASH_ReadWord(ADDR_BASE_BLD);
+#endif /* UPDATE_SUPPORT_BACKUP */
+#endif /* PROGRAM_BLD */
           if ((msp_addr & 0xFFFF8000) != 0x10000000 && (msp_addr & 0xFFFF0000) != 0x20000000) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_UNKNOW;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
             break;
           }
-#ifndef PROGRAM_BLD
-          /* 升级包校验完成后续操作 */
-          if (s_update_info.partition_type == PARTITION_BLD) {
-            /* 加载 BLD 到运行区 */
-            err = load_bld_from_backup();
-            if (err) {
-              /* 理论上不应该发生 */
-              printf_dbg("![impossible] PKG_TYPE_FINISH\r\n");
-              memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
-              status.errno = ERRNO_FLASH_WR;
-              memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
-              sys->ctrl.update.stage = UPDATE_FINISH;
-              break;
-            }
-          } else {
-            /* 更新引导参数 */
-            s_update_info.boot_param.update_needed = 1;
-            s_update_info.boot_param.back_to_app = 0;
-            s_update_info.boot_param.app_status = STATUS_LOAD;
-            if (boot_param_update(&s_update_info.boot_param)) {
-              /* 理论上不应该发生 */
-              printf_dbg("![impossible] PKG_TYPE_FINISH\r\n");
-              memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
-              status.errno = ERRNO_FLASH_WR;
-              memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
-              sys->ctrl.update.stage = UPDATE_FINISH;
-              break;
-            }
-          }
-#else
+#ifdef PROGRAM_BLD
           /* 更新引导参数 */
-          s_update_info.boot_param.update_needed = 1;
           s_update_info.boot_param.back_to_app = 0;
-          s_update_info.boot_param.app_status = STATUS_LOAD;
+          s_update_info.boot_param.from_app = 0;
+#ifdef UPDATE_SUPPORT_BACKUP
+          if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+            s_update_info.boot_param.update_needed = 0;
+            s_update_info.boot_param.app_status = STATUS_BOOT;
+          } else {
+            s_update_info.boot_param.update_needed = 1;
+            s_update_info.boot_param.app_status = STATUS_LOAD;
+          }
+#else  /* UPDATE_SUPPORT_BACKUP */
+          s_update_info.boot_param.update_needed = 0;
+          s_update_info.boot_param.app_status = STATUS_BOOT;
+#endif /* UPDATE_SUPPORT_BACKUP */
           if (boot_param_update(&s_update_info.boot_param)) {
             /* 理论上不应该发生 */
             printf_dbg("![impossible] PKG_TYPE_FINISH\r\n");
@@ -689,7 +882,68 @@ void update_pkg_process(void) {
             sys->ctrl.update.stage = UPDATE_FINISH;
             break;
           }
-#endif
+#else /* PROGRAM_BLD */
+#ifdef UPDATE_SUPPORT_BACKUP
+          if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
+            s_update_info.boot_param.update_needed = 0;
+            s_update_info.boot_param.app_status = STATUS_BOOT;
+            s_update_info.boot_param.back_to_app = 0;
+            s_update_info.boot_param.from_app = 0;
+            if (boot_param_update(&s_update_info.boot_param)) {
+              /* 理论上不应该发生 */
+              printf_dbg("![impossible] PKG_TYPE_FINISH\r\n");
+              memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+              status.errno = ERRNO_FLASH_WR;
+              memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+              sys->ctrl.update.stage = UPDATE_FINISH;
+              break;
+            }
+          } else {
+            /* 升级包校验完成后续操作 */
+            if (s_update_info.partition_type == PARTITION_BLD) {
+              /* 加载 BLD 到运行区 */
+              err = load_bld_from_backup();
+              if (err) {
+                /* 理论上不应该发生 */
+                printf_dbg("![impossible] PKG_TYPE_FINISH\r\n");
+                memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+                status.errno = ERRNO_FLASH_WR;
+                memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+                sys->ctrl.update.stage = UPDATE_FINISH;
+                break;
+              }
+            } else {
+              /* 更新引导参数 */
+              s_update_info.boot_param.update_needed = 1;
+              s_update_info.boot_param.back_to_app = 0;
+              s_update_info.boot_param.app_status = STATUS_LOAD;
+              if (boot_param_update(&s_update_info.boot_param)) {
+                /* 理论上不应该发生 */
+                printf_dbg("![impossible] PKG_TYPE_FINISH\r\n");
+                memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+                status.errno = ERRNO_FLASH_WR;
+                memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+                sys->ctrl.update.stage = UPDATE_FINISH;
+                break;
+              }
+            }
+          }
+#else  /* UPDATE_SUPPORT_BACKUP */
+          s_update_info.boot_param.update_needed = 0;
+          s_update_info.boot_param.app_status = STATUS_BOOT;
+          s_update_info.boot_param.back_to_app = 0;
+          s_update_info.boot_param.from_app = 0;
+          if (boot_param_update(&s_update_info.boot_param)) {
+            /* 理论上不应该发生 */
+            printf_dbg("![impossible] PKG_TYPE_FINISH\r\n");
+            memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
+            status.errno = ERRNO_FLASH_WR;
+            memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
+            sys->ctrl.update.stage = UPDATE_FINISH;
+            break;
+          }
+#endif /* UPDATE_SUPPORT_BACKUP */
+#endif /* PROGRAM_BLD */
           /* 升级成功 */
           memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
           status.errno = ERRNO_SUCC;
@@ -709,6 +963,7 @@ void update_pkg_process(void) {
           /* 升级失败，等待复位 */
           memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
           if (status.errno != ERRNO_SUCC) {
+            memcpy(&s_update_info.partition_type, &g_update_pkg.init.partition_type, sizeof(s_update_info.partition_type));
             update_init(sys);
           }
         } break;

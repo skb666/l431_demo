@@ -83,12 +83,14 @@ static void system_ctrl_check(void) {
     case SYSTEM_CTRL_BOOT_APP: {
       boot_param_get(&param);
 
-      if (param.app_status == STATUS_NORM) {
+      if ((param.app_status == STATUS_NORM) || (param.app_status == STATUS_NONE)) {
         param.update_needed = 0;
         param.app_status = STATUS_BOOT;
         if (boot_param_update(&param)) {
           Error_Handler();
         }
+      } else {
+        sys->ctrl.system = SYSTEM_CTRL_NONE;
       }
 
       printf_dbg("SYSTEM_CTRL_BOOT_APP\r\n");

@@ -13,6 +13,7 @@ extern "C" {
 typedef enum {
   SYSTEM_CTRL_NONE = 0,
   SYSTEM_CTRL_REBOOT = 1,
+  SYSTEM_CTRL_BOOT_APP = 2,
   SYSTEM_CTRL_UPDATE_START = 3,
 } SYSTEM_CTRL;
 

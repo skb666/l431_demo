@@ -82,7 +82,19 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  BOOT_PARAM param;
+  // boot_param_get(&param);
+  if (boot_param_get_with_check(&param)) {
+    Error_Handler();
+  }
+  if (param.update_needed && param.from_app) {
+    MX_DMA_Init();
+    MX_CRC_Init();
+    MX_USART1_UART_Init();
+    MX_IWDG_Init();
+    MX_I2C1_Init();
+    goto LABEL_MAIN;
+  }
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -100,9 +112,10 @@ int main(void)
   MX_IWDG_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+LABEL_MAIN:
   uart_config(DEV_USART1);
   i2c_slave_config();
-  boot_param_check(1);
+  boot_param_check(0);
   /* USER CODE END 2 */
 
   /* Infinite loop */

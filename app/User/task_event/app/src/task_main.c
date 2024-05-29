@@ -204,12 +204,13 @@ static void system_ctrl_check(void) {
       boot_param_get(&param);
 
       param.update_needed = 1;
+      param.from_app = 1;
       if (boot_param_update(&param)) {
         Error_Handler();
       }
 
       printf_dbg("SYSTEM_CTRL_UPDATE_START\r\n");
-      NVIC_SystemReset();
+      boot_to_bld(ADDR_BASE_BLD);
     } break;
     default: {
     } break;
