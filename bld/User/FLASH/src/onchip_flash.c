@@ -1,7 +1,5 @@
 #include "onchip_flash.h"
 
-#include <string.h>
-
 #include "main.h"
 
 #define FLASH_WAITETIME 50000  // FLASH等待超时时间
@@ -14,34 +12,34 @@ static inline uint32_t STMFLASH_GetPage(uint32_t Addr) {
   return page;
 }
 
-int8_t STMFLASH_Read(const uint32_t ReadAddr, uint64_t *pBuffer, uint32_t Num) {
+int8_t STMFLASH_Read(const uint32_t ReadAddr, FLASH_DATA_TYPE *pBuffer, uint32_t Num) {
   uint32_t addrx = 0;
   uint32_t addr_end = 0;
 
   addrx = ReadAddr;
-  addr_end = ReadAddr + Num * 8;
+  addr_end = ReadAddr + Num * FLASH_DATA_ALIGN;
 
-  if (addrx < STMFLASH_BASE || addr_end > STMFLASH_END || addrx % 8) {
+  if (addrx < STMFLASH_BASE || addr_end > STMFLASH_END || addrx % FLASH_DATA_ALIGN) {
     return -1;  // 非法地址
   }
 
   for (uint32_t i = 0; i < Num; i++) {
     pBuffer[i] = STMFLASH_ReadDoubleWord(addrx);
-    addrx += 8;
+    addrx += FLASH_DATA_ALIGN;
   }
 
   return 0;
 }
 
-int8_t STMFLASH_Write(uint32_t WriteAddr, uint64_t *pBuffer, uint32_t Num) {
+int8_t STMFLASH_Write(uint32_t WriteAddr, FLASH_DATA_TYPE *pBuffer, uint32_t Num) {
   HAL_StatusTypeDef status = HAL_OK;
   uint32_t addrx = 0;
   uint32_t addr_end = 0;
 
   addrx = WriteAddr;               // 写入的起始地址
-  addr_end = WriteAddr + Num * 8;  // 写入的结束地址
+  addr_end = WriteAddr + Num * FLASH_DATA_ALIGN;  // 写入的结束地址
 
-  if (addrx < STMFLASH_BASE || addr_end > STMFLASH_END || addrx % 8) {
+  if (addrx < STMFLASH_BASE || addr_end > STMFLASH_END || addrx % FLASH_DATA_ALIGN) {
     return -1;  // 非法地址
   }
 
@@ -54,7 +52,7 @@ int8_t STMFLASH_Write(uint32_t WriteAddr, uint64_t *pBuffer, uint32_t Num) {
     if (status != HAL_OK) {
       break;
     }
-    addrx += 8;
+    addrx += FLASH_DATA_ALIGN;
     pBuffer++;
   }
 

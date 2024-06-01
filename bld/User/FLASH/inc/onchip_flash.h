@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#define FLASH_DATA_TYPE uint64_t
+#define FLASH_DATA_ALIGN_SHIFT (3)
+#define FLASH_DATA_ALIGN (1 << FLASH_DATA_ALIGN_SHIFT)
+
 #define STMFLASH_BASE (0x08000000UL) /*!< FLASH(up to 256 KB) base address */
 #define STMFLASH_END (0x08040000UL)  /*!< FLASH END address                */
 
@@ -151,8 +155,8 @@ static inline uint64_t STMFLASH_ReadDoubleWord(uint32_t faddr) {
   return *(volatile uint64_t *)faddr;
 }
 
-int8_t STMFLASH_Write(uint32_t WriteAddr, uint64_t *pBuffer, uint32_t Num);
-int8_t STMFLASH_Read(const uint32_t ReadAddr, uint64_t *pBuffer, uint32_t Num);
+int8_t STMFLASH_Write(uint32_t WriteAddr, FLASH_DATA_TYPE *pBuffer, uint32_t Num);
+int8_t STMFLASH_Read(const uint32_t ReadAddr, FLASH_DATA_TYPE *pBuffer, uint32_t Num);
 int8_t STMFLASH_Erase(uint32_t addrx, uint32_t length, uint32_t retry);
 
 #ifdef __cplusplus

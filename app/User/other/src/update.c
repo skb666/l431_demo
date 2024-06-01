@@ -66,7 +66,7 @@ static BOOT_PARAM boot_param_default = {
     .from_app = 0,
     .back_to_app = 0,
 };
-const uint32_t boot_param_size64 = (sizeof(BOOT_PARAM) >> 3) + !!(sizeof(BOOT_PARAM) % 8);
+const uint32_t boot_param_size = (sizeof(BOOT_PARAM) >> FLASH_DATA_ALIGN_SHIFT) + !!(sizeof(BOOT_PARAM) % FLASH_DATA_ALIGN);
 const uint32_t boot_param_crcdatalen = sizeof(boot_param_default) - sizeof(boot_param_default.crc_val);
 
 static inline void crc_reset(void) {
@@ -108,7 +108,7 @@ static int8_t boot_param_save(uint32_t addr, BOOT_PARAM *param) {
   param->crc_val = param_crc_calc(param);
 
   disable_global_irq();
-  err = STMFLASH_Write(addr, (uint64_t *)param, boot_param_size64);
+  err = STMFLASH_Write(addr, (FLASH_DATA_TYPE *)param, boot_param_size);
   enable_global_irq();
   if (err) {
     return err;
@@ -154,14 +154,14 @@ int8_t boot_param_bak_update(BOOT_PARAM *param) {
 }
 
 void boot_param_get(BOOT_PARAM *pdata) {
-  (void)STMFLASH_Read(ADDR_BASE_PARAM, (uint64_t *)pdata, boot_param_size64);
+  (void)STMFLASH_Read(ADDR_BASE_PARAM, (FLASH_DATA_TYPE *)pdata, boot_param_size);
 }
 
 int8_t boot_param_get_with_check(BOOT_PARAM *pdata) {
   BOOT_PARAM param, param_bak;
 
-  (void)STMFLASH_Read(ADDR_BASE_PARAM, (uint64_t *)&param, boot_param_size64);
-  (void)STMFLASH_Read(ADDR_BASE_PARAM_BAK, (uint64_t *)&param_bak, boot_param_size64);
+  (void)STMFLASH_Read(ADDR_BASE_PARAM, (FLASH_DATA_TYPE *)&param, boot_param_size);
+  (void)STMFLASH_Read(ADDR_BASE_PARAM_BAK, (FLASH_DATA_TYPE *)&param_bak, boot_param_size);
 
   if (param_crc_calc(&param) == param.crc_val) {
     printf_dbg("boot param checked Ok\r\n");
@@ -210,7 +210,7 @@ int8_t boot_param_get_with_check(BOOT_PARAM *pdata) {
 #ifdef UPDATE_SUPPORT_BACKUP
 #ifdef PROGRAM_BLD
 static int8_t load_app_from_backup(void) {
-  static uint64_t buf[256] = {0};
+  static FLASH_DATA_TYPE buf[FLASH_PAGE_SIZE / FLASH_DATA_ALIGN] = {0};
   int8_t err = 0;
   uint32_t addr_read = ADDR_BASE_BACKUP;
   uint32_t addr_write = ADDR_BASE_APP;
@@ -227,9 +227,9 @@ static int8_t load_app_from_backup(void) {
   }
 
   while (addr_write < addr_write_end) {
-    err |= STMFLASH_Read(addr_read, buf, sizeof(buf) >> 3);
+    err |= STMFLASH_Read(addr_read, buf, sizeof(buf) >> FLASH_DATA_ALIGN_SHIFT);
     disable_global_irq();
-    err |= STMFLASH_Write(addr_write, buf, sizeof(buf) >> 3);
+    err |= STMFLASH_Write(addr_write, buf, sizeof(buf) >> FLASH_DATA_ALIGN_SHIFT);
     enable_global_irq();
     if (!err) {
       addr_read += sizeof(buf);
@@ -244,7 +244,7 @@ static int8_t load_app_from_backup(void) {
 }
 #else  /* PROGRAM_BLD */
 static int8_t load_bld_from_backup(void) {
-  static uint64_t buf[256] = {0};
+  static FLASH_DATA_TYPE buf[FLASH_PAGE_SIZE / FLASH_DATA_ALIGN] = {0};
   int8_t err = 0;
   uint32_t addr_read = ADDR_BASE_BACKUP;
   uint32_t addr_write = ADDR_BASE_BLD;
@@ -261,9 +261,9 @@ static int8_t load_bld_from_backup(void) {
   }
 
   while (addr_write < addr_write_end) {
-    err |= STMFLASH_Read(addr_read, buf, sizeof(buf) >> 3);
+    err |= STMFLASH_Read(addr_read, buf, sizeof(buf) >> FLASH_DATA_ALIGN_SHIFT);
     disable_global_irq();
-    err |= STMFLASH_Write(addr_write, buf, sizeof(buf) >> 3);
+    err |= STMFLASH_Write(addr_write, buf, sizeof(buf) >> FLASH_DATA_ALIGN_SHIFT);
     enable_global_irq();
     if (!err) {
       addr_read += sizeof(buf);
@@ -637,7 +637,7 @@ void update_pkg_process(void) {
           }
           /* 检查数据长度 */
           if ((s_update_info.data_size_one > UPDATE_PACKAGE_MAX_SIZE) ||
-              (s_update_info.data_size_one % 8)) {
+              (s_update_info.data_size_one % FLASH_DATA_ALIGN)) {
             memcpy(&status, &sys->ctrl.update.status, sizeof(UPDATE_STATUS));
             status.errno = ERRNO_DATA_SIZE;
             memcpy(&sys->ctrl.update.status, &status, sizeof(UPDATE_STATUS));
@@ -764,33 +764,33 @@ void update_pkg_process(void) {
 #ifdef UPDATE_SUPPORT_BACKUP
           if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
             err = STMFLASH_Write((ADDR_BASE_APP + s_update_info.recv_len),
-                (uint64_t *)g_update_pkg.data.data,
-                ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+                (FLASH_DATA_TYPE *)g_update_pkg.data.data,
+                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
           } else {
             err = STMFLASH_Write((ADDR_BASE_BACKUP + s_update_info.recv_len),
-                (uint64_t *)g_update_pkg.data.data,
-                ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+                (FLASH_DATA_TYPE *)g_update_pkg.data.data,
+                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
           }
 #else  /* UPDATE_SUPPORT_BACKUP */
           err = STMFLASH_Write((ADDR_BASE_APP + s_update_info.recv_len),
-              (uint64_t *)g_update_pkg.data.data,
-              ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+              (FLASH_DATA_TYPE *)g_update_pkg.data.data,
+              ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
 #endif /* UPDATE_SUPPORT_BACKUP */
 #else  /* PROGRAM_BLD */
 #ifdef UPDATE_SUPPORT_BACKUP
           if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
             err = STMFLASH_Write((ADDR_BASE_BLD + s_update_info.recv_len),
-                (uint64_t *)g_update_pkg.data.data,
-                ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+                (FLASH_DATA_TYPE *)g_update_pkg.data.data,
+                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
           } else {
             err = STMFLASH_Write((ADDR_BASE_BACKUP + s_update_info.recv_len),
-                (uint64_t *)g_update_pkg.data.data,
-                ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+                (FLASH_DATA_TYPE *)g_update_pkg.data.data,
+                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
           }
 #else  /* UPDATE_SUPPORT_BACKUP */
           err = STMFLASH_Write((ADDR_BASE_BLD + s_update_info.recv_len),
-              (uint64_t *)g_update_pkg.data.data,
-              ((g_update_pkg.data.data_len >> 3) + !!(g_update_pkg.data.data_len % 8)));
+              (FLASH_DATA_TYPE *)g_update_pkg.data.data,
+              ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
 #endif /* UPDATE_SUPPORT_BACKUP */
 #endif /* PROGRAM_BLD */
           enable_global_irq();

@@ -5,29 +5,29 @@
 
 #include "onchip_flash.h"
 
-#define ADDR_BASE_BLD (STMFLASH_BASE)
-#define ADDR_BASE_PARAM (ADDR_FLASH_PAGE_16)
-#define ADDR_BASE_PARAM_BAK (ADDR_FLASH_PAGE_17)
-#define ADDR_BASE_APP (ADDR_FLASH_PAGE_18)
-
 #if defined(USING_UPDATE_BACKUP_OVERWRITE) || defined(USING_UPDATE_BACKUP_IN_BLD) || defined(USING_UPDATE_BACKUP_IN_APP)
 #ifndef UPDATE_SUPPORT_BACKUP
 #define UPDATE_SUPPORT_BACKUP
 #endif
 #endif
 
+#define ADDR_BASE_BLD (STMFLASH_BASE)
+#define ADDR_BASE_PARAM (ADDR_FLASH_PAGE_16)
+#define ADDR_BASE_PARAM_BAK (ADDR_FLASH_PAGE_17)
+#define ADDR_BASE_APP (ADDR_FLASH_PAGE_18)
 #ifdef UPDATE_SUPPORT_BACKUP
-#define ADDR_BASE_BACKUP (ADDR_FLASH_PAGE_73)
+#define ADDR_BASE_BACKUP (ADDR_FLASH_PAGE_71)
 #endif
+#define ADDR_BASE_CUSTOM (ADDR_FLASH_PAGE_124)
 
 #define PART_SIZE_BLD ((ADDR_BASE_PARAM) - (ADDR_BASE_BLD))          // 32KB
 #define PART_SIZE_PARAM ((ADDR_BASE_PARAM_BAK) - (ADDR_BASE_PARAM))  // 2KB
-
 #ifdef UPDATE_SUPPORT_BACKUP
-#define PART_SIZE_APP ((ADDR_BASE_BACKUP) - (ADDR_BASE_APP))  // 110KB
+#define PART_SIZE_APP ((ADDR_BASE_BACKUP) - (ADDR_BASE_APP))  // 106KB
 #else
-#define PART_SIZE_APP ((STMFLASH_END) - (ADDR_BASE_APP))  // 220KB
+#define PART_SIZE_APP ((ADDR_BASE_CUSTOM) - (ADDR_BASE_APP))  // 212KB
 #endif
+#define PART_SIZE_CUSTOM ((STMFLASH_END) - (ADDR_BASE_CUSTOM))
 
 #define UPDATE_PACKAGE_MAX_SIZE 1024
 
@@ -57,7 +57,7 @@ typedef struct {
   uint32_t from_app;       // 是否从 APP 跳转
   uint32_t back_to_app;    // 是否允许回到 APP
   uint32_t crc_val;        // 引导参数的 CRC 校验值
-} __attribute__((aligned(8))) BOOT_PARAM;
+} __attribute__((aligned(FLASH_DATA_ALIGN))) BOOT_PARAM;
 
 typedef enum {
   PARTITION_APP = 0xFFFFFFFF,
