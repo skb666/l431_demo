@@ -196,7 +196,7 @@ static void system_ctrl_check(void) {
 
   switch (sys->ctrl.system) {
     case SYSTEM_CTRL_REBOOT: {
-      printf_dbg("SYSTEM_CTRL_REBOOT\r\n");
+      printf_dbg("\r\nSYSTEM_CTRL_REBOOT\r\n");
       LL_mDelay(500);
       NVIC_SystemReset();
     } break;
@@ -209,7 +209,7 @@ static void system_ctrl_check(void) {
         Error_Handler();
       }
 
-      printf_dbg("SYSTEM_CTRL_UPDATE_START\r\n");
+      printf_dbg("\r\nSYSTEM_CTRL_UPDATE_START\r\n");
       boot_to_bld(ADDR_BASE_BLD);
     } break;
     default: {

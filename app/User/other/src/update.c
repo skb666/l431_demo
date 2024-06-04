@@ -81,12 +81,12 @@ static inline void crc_reset(void) {
   (&hcrc)->State = HAL_CRC_STATE_READY;
 }
 
-static uint32_t param_crc_calc(const BOOT_PARAM *param) {
-  uint32_t crc = 0;
+static uint32_t param_crc_calc(BOOT_PARAM *param) {
+  CRC32_MPEG2 crc;
 
-  crc = HAL_CRC_Calculate(&hcrc, (uint32_t *)param, boot_param_crcdatalen);
+  (void)CRC_OPT(crc32_mpeg2, init)(&crc);
 
-  return crc;
+  return CRC_OPT(crc32_mpeg2, calc)(&crc, param, boot_param_crcdatalen);
 }
 
 static int8_t boot_param_erase(uint32_t addr) {
@@ -379,10 +379,10 @@ void boot_param_check(uint8_t with_check) {
     if (boot_param_update(&param)) {
       Error_Handler();
     }
-    printf_dbg("running in app\r\n");
+    printf_dbg("\r\nrunning in app\r\n");
     return;
   } else {
-    printf_dbg("running in bld\r\n");
+    printf_dbg("\r\nrunning in bld\r\n");
   }
 
 #ifdef PROGRAM_BLD
@@ -765,32 +765,32 @@ void update_pkg_process(void) {
           if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
             err = STMFLASH_Write((ADDR_BASE_APP + s_update_info.recv_len),
                 (FLASH_DATA_TYPE *)g_update_pkg.data.data,
-                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
+                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len % FLASH_DATA_ALIGN)));
           } else {
             err = STMFLASH_Write((ADDR_BASE_BACKUP + s_update_info.recv_len),
                 (FLASH_DATA_TYPE *)g_update_pkg.data.data,
-                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
+                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len % FLASH_DATA_ALIGN)));
           }
 #else  /* UPDATE_SUPPORT_BACKUP */
           err = STMFLASH_Write((ADDR_BASE_APP + s_update_info.recv_len),
               (FLASH_DATA_TYPE *)g_update_pkg.data.data,
-              ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
+              ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len % FLASH_DATA_ALIGN)));
 #endif /* UPDATE_SUPPORT_BACKUP */
 #else  /* PROGRAM_BLD */
 #ifdef UPDATE_SUPPORT_BACKUP
           if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
             err = STMFLASH_Write((ADDR_BASE_BLD + s_update_info.recv_len),
                 (FLASH_DATA_TYPE *)g_update_pkg.data.data,
-                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
+                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len % FLASH_DATA_ALIGN)));
           } else {
             err = STMFLASH_Write((ADDR_BASE_BACKUP + s_update_info.recv_len),
                 (FLASH_DATA_TYPE *)g_update_pkg.data.data,
-                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
+                ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len % FLASH_DATA_ALIGN)));
           }
 #else  /* UPDATE_SUPPORT_BACKUP */
           err = STMFLASH_Write((ADDR_BASE_BLD + s_update_info.recv_len),
               (FLASH_DATA_TYPE *)g_update_pkg.data.data,
-              ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len% FLASH_DATA_ALIGN)));
+              ((g_update_pkg.data.data_len >> FLASH_DATA_ALIGN_SHIFT) + !!(g_update_pkg.data.data_len % FLASH_DATA_ALIGN)));
 #endif /* UPDATE_SUPPORT_BACKUP */
 #endif /* PROGRAM_BLD */
           enable_global_irq();

@@ -76,7 +76,7 @@ static void system_ctrl_check(void) {
 
   switch (sys->ctrl.system) {
     case SYSTEM_CTRL_REBOOT: {
-      printf_dbg("SYSTEM_CTRL_REBOOT\r\n");
+      printf_dbg("\r\nSYSTEM_CTRL_REBOOT\r\n");
       LL_mDelay(500);
       NVIC_SystemReset();
     } break;
@@ -93,7 +93,7 @@ static void system_ctrl_check(void) {
         sys->ctrl.system = SYSTEM_CTRL_NONE;
       }
 
-      printf_dbg("SYSTEM_CTRL_BOOT_APP\r\n");
+      printf_dbg("\r\nSYSTEM_CTRL_BOOT_APP\r\n");
       boot_param_check(0);
     } break;
     default: {

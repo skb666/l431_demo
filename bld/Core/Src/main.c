@@ -83,7 +83,6 @@ int main(void)
 
   /* USER CODE BEGIN Init */
   BOOT_PARAM param;
-  // boot_param_get(&param);
   if (boot_param_get_with_check(&param)) {
     Error_Handler();
   }
