@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-/* VERSION: 1.0.1.0 */
-#define MCU_SOFTWARE_VERSION (0x1010)
+/* VERSION: 1.1.1.0 */
+#define MCU_SOFTWARE_VERSION (0x1110)
 
 #ifdef __cplusplus
 extern "C" {

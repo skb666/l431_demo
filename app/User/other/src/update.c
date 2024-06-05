@@ -58,16 +58,18 @@ static UPDATE_INFO s_update_info;
 static BOOT_PARAM boot_param_default = {
     .update_needed = 0,
     .app_status = STATUS_BOOT,
+    .back_to_app = 0,
+    .version = MCU_SOFTWARE_VERSION,
 #if defined(USING_UPDATE_BACKUP_IN_BLD) || defined(USING_UPDATE_BACKUP_IN_APP)
     .update_type = UPDATE_BACKUP,
 #else
     .update_type = UPDATE_OVERWRITE,
 #endif
     .from_app = 0,
-    .back_to_app = 0,
 };
 const uint32_t boot_param_size = (sizeof(BOOT_PARAM) >> FLASH_DATA_ALIGN_SHIFT) + !!(sizeof(BOOT_PARAM) % FLASH_DATA_ALIGN);
-const uint32_t boot_param_crcdatalen = sizeof(boot_param_default) - sizeof(boot_param_default.crc_val);
+const uint32_t boot_param_crcdatalen_v1 = sizeof(BOOT_PARAM_V1) - sizeof(((BOOT_PARAM_V1 *)0)->crc_val_v1);
+const uint32_t boot_param_crcdatalen_v2 = sizeof(BOOT_PARAM) - sizeof(((BOOT_PARAM *)0)->crc_val_v2);
 
 static inline void crc_reset(void) {
   /* Change CRC peripheral state */
@@ -81,12 +83,12 @@ static inline void crc_reset(void) {
   (&hcrc)->State = HAL_CRC_STATE_READY;
 }
 
-static uint32_t param_crc_calc(BOOT_PARAM *param) {
+static uint32_t param_crc_calc(BOOT_PARAM *param, size_t length) {
   CRC32_MPEG2 crc;
-
+  
   (void)CRC_OPT(crc32_mpeg2, init)(&crc);
-
-  return CRC_OPT(crc32_mpeg2, calc)(&crc, param, boot_param_crcdatalen);
+  
+  return CRC_OPT(crc32_mpeg2, calc)(&crc, param, length);
 }
 
 static int8_t boot_param_erase(uint32_t addr) {
@@ -105,7 +107,8 @@ static int8_t boot_param_erase(uint32_t addr) {
 static int8_t boot_param_save(uint32_t addr, BOOT_PARAM *param) {
   int8_t err = 0;
 
-  param->crc_val = param_crc_calc(param);
+  param->crc_val_v1 = param_crc_calc(param, boot_param_crcdatalen_v1);
+  param->crc_val_v2 = param_crc_calc(param, boot_param_crcdatalen_v2);
 
   disable_global_irq();
   err = STMFLASH_Write(addr, (FLASH_DATA_TYPE *)param, boot_param_size);
@@ -163,9 +166,9 @@ int8_t boot_param_get_with_check(BOOT_PARAM *pdata) {
   (void)STMFLASH_Read(ADDR_BASE_PARAM, (FLASH_DATA_TYPE *)&param, boot_param_size);
   (void)STMFLASH_Read(ADDR_BASE_PARAM_BAK, (FLASH_DATA_TYPE *)&param_bak, boot_param_size);
 
-  if (param_crc_calc(&param) == param.crc_val) {
+  if (param_crc_calc(&param, boot_param_crcdatalen_v2) == param.crc_val_v2) {
     printf_dbg("boot param checked Ok\r\n");
-    if (param_crc_calc(&param_bak) == param_bak.crc_val) {
+    if (param_crc_calc(&param_bak, boot_param_crcdatalen_v2) == param_bak.crc_val_v2) {
       printf_dbg("boot param backup checked Ok\r\n");
       if (memcmp(&param, &param_bak, sizeof(BOOT_PARAM)) != 0) {
         printf_dbg("boot param main sector and backup sector data are different, update bakup sector data\r\n");
@@ -184,7 +187,7 @@ int8_t boot_param_get_with_check(BOOT_PARAM *pdata) {
     memcpy(pdata, &param, sizeof(BOOT_PARAM));
   } else {
     printf_dbg("boot param checked Fail\r\n");
-    if (param_crc_calc(&param_bak) == param_bak.crc_val) {
+    if (param_crc_calc(&param_bak, boot_param_crcdatalen_v2) == param_bak.crc_val_v2) {
       printf_dbg("boot param backup checked Ok\r\n");
       printf_dbg("update main sector data\r\n");
       if (boot_param_update(&param_bak)) {
@@ -391,8 +394,8 @@ void boot_param_check(uint8_t with_check) {
       /* 默认状态，尝试引导 */
       case STATUS_BOOT: {
         param.update_needed = 1;
-        param.from_app = 0;
         param.back_to_app = 0;
+        param.from_app = 0;
         if (boot_param_update(&param)) {
           Error_Handler();
         }
@@ -407,8 +410,8 @@ void boot_param_check(uint8_t with_check) {
       default: {
         param.update_needed = 1;
         param.app_status = STATUS_NONE;
-        param.from_app = 0;
         param.back_to_app = 0;
+        param.from_app = 0;
         if (boot_param_update(&param)) {
           Error_Handler();
         }
@@ -433,8 +436,8 @@ void boot_param_check(uint8_t with_check) {
       case STATUS_RECV: {
         if (param.update_type == UPDATE_OVERWRITE) {
           param.app_status = STATUS_NONE;
-          param.from_app = 0;
           param.back_to_app = 0;
+          param.from_app = 0;
           if (boot_param_update(&param)) {
             Error_Handler();
           }
@@ -460,8 +463,8 @@ void boot_param_check(uint8_t with_check) {
       case STATUS_LOAD: {
         if (param.update_type == UPDATE_OVERWRITE) {
           param.app_status = STATUS_NONE;
-          param.from_app = 0;
           param.back_to_app = 0;
+          param.from_app = 0;
           if (boot_param_update(&param)) {
             Error_Handler();
           }
@@ -471,8 +474,8 @@ void boot_param_check(uint8_t with_check) {
             Error_Handler();
           }
           param.app_status = STATUS_BOOT;
-          param.from_app = 0;
           param.back_to_app = 0;
+          param.from_app = 0;
           if (boot_param_update(&param)) {
             Error_Handler();
           }
@@ -487,8 +490,8 @@ void boot_param_check(uint8_t with_check) {
       case STATUS_NONE:
       default: {
         param.app_status = STATUS_NONE;
-        param.from_app = 0;
         param.back_to_app = 0;
+        param.from_app = 0;
         if (boot_param_update(&param)) {
           Error_Handler();
         }
@@ -504,8 +507,8 @@ void boot_param_check(uint8_t with_check) {
   /* 引导失败，进入升级 */
   param.update_needed = 1;
   param.app_status = STATUS_NONE;
-  param.from_app = 0;
   param.back_to_app = 0;
+  param.from_app = 0;
   if (boot_param_update(&param)) {
     Error_Handler();
   }

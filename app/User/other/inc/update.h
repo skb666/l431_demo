@@ -53,10 +53,19 @@ typedef enum {
 typedef struct {
   volatile uint32_t update_needed;  // 更新标记
   volatile uint32_t app_status;     // APP 的状态
+  volatile uint32_t back_to_app;    // 是否允许回到 APP
+  volatile uint32_t crc_val_v1;     // 引导参数的 CRC 校验值
+} __attribute__((aligned(FLASH_DATA_ALIGN))) BOOT_PARAM_V1;
+
+typedef struct {
+  volatile uint32_t update_needed;  // 更新标记
+  volatile uint32_t app_status;     // APP 的状态
+  volatile uint32_t back_to_app;    // 是否允许回到 APP
+  volatile uint32_t crc_val_v1;     // 引导参数的 CRC 校验值
+  volatile uint32_t version;
   volatile uint32_t update_type;    // 升级方案
   volatile uint32_t from_app;       // 是否从 APP 跳转
-  volatile uint32_t back_to_app;    // 是否允许回到 APP
-  volatile uint32_t crc_val;        // 引导参数的 CRC 校验值
+  volatile uint32_t crc_val_v2;     // 引导参数的 CRC 校验值
 } __attribute__((aligned(FLASH_DATA_ALIGN))) BOOT_PARAM;
 
 typedef enum {
