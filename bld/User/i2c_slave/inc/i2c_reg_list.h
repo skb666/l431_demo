@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 typedef enum {
-  REG_VERSION = 0x0000,
+  REG_VERSION = 0xFFFE,
   REG_SYSTEM_CTRL = 0xFF00,
   REG_UPDATE_DATA = 0xFF01,
   REG_UPDATE_STATUS = 0xFF02,

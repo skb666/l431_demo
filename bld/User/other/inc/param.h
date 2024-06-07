@@ -3,8 +3,26 @@
 
 #include <stdint.h>
 
-/* VERSION: 0.1.1.0 */
-#define MCU_SOFTWARE_VERSION (0x0110)
+#define VERSION_IAP (1)
+#define VERSION_SUPPORT (0)
+
+#ifdef PROGRAM_BLD
+#define VERSION_PARTITION (0)
+#else
+#define VERSION_PARTITION (1)
+#endif
+
+#if defined(USING_UPDATE_OVERWRITE)
+#define VERSION_UPDATE_TYPE (0)
+#elif defined(USING_UPDATE_BACKUP_OVERWRITE)
+#define VERSION_UPDATE_TYPE (1)
+#elif defined(USING_UPDATE_BACKUP_IN_BLD)
+#define VERSION_UPDATE_TYPE (2)
+#elif defined(USING_UPDATE_BACKUP_IN_APP)
+#define VERSION_UPDATE_TYPE (3)
+#else
+#define VERSION_UPDATE_TYPE (0)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,6 +36,7 @@ typedef enum {
 } SYSTEM_CTRL;
 
 typedef struct {
+  uint16_t version;
   uint16_t need_process;
   uint16_t stage;
   uint16_t status;

@@ -30,7 +30,9 @@
 extern UPDATE_PKG g_update_pkg;
 
 void reg_read_cb_version(void) {
-  I2C_PUT_NUM(uint16_t, MCU_SOFTWARE_VERSION);
+  SYS_PARAM *sys = sys_param_get();
+
+  I2C_PUT_NUM(uint16_t, sys->ctrl.update.version);
 }
 
 void reg_read_cb_system_ctrl(void) {

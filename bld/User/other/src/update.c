@@ -59,7 +59,7 @@ static BOOT_PARAM boot_param_default = {
     .update_needed = 0,
     .app_status = STATUS_BOOT,
     .back_to_app = 0,
-    .version = MCU_SOFTWARE_VERSION,
+    .version = VERSION_IAP,
 #if defined(USING_UPDATE_BACKUP_IN_BLD) || defined(USING_UPDATE_BACKUP_IN_APP)
     .update_type = UPDATE_BACKUP,
 #else
@@ -85,9 +85,9 @@ static inline void crc_reset(void) {
 
 static uint32_t param_crc_calc(BOOT_PARAM *param, size_t length) {
   CRC32_MPEG2 crc;
-  
+
   (void)CRC_OPT(crc32_mpeg2, init)(&crc);
-  
+
   return CRC_OPT(crc32_mpeg2, calc)(&crc, param, length);
 }
 
