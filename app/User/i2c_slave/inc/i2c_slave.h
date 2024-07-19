@@ -18,9 +18,9 @@
 #define REG_ADDR_TYPE uint8_t
 #elif (REG_ADDR_SIZE == 2)
 #define REG_ADDR_TYPE uint16_t
-#elif (NUM_BITS == 4)
+#elif (REG_ADDR_SIZE == 4)
 #define REG_ADDR_TYPE uint32_t
-#elif (NUM_BITS == 8)
+#elif (REG_ADDR_SIZE == 8)
 #define REG_ADDR_TYPE uint64_t
 #endif
 

@@ -212,6 +212,8 @@ static void i2c_prepare_data(void) {
   if (reg->read_cb) {
     reg->read_cb();
   }
+
+  i2c_dev.reg_addr = REG_MAX;
 }
 
 static void i2c_transmit_cb(void) {
@@ -236,6 +238,10 @@ static void i2c_complete_cb(void) {
     if ((reg->attrib != REG_RO) && reg->write_cb) {
       reg->write_cb();
     }
+  } else {
+    disable_global_irq();
+    ring_reset(&i2c_dev.tx_ring);
+    enable_global_irq();
   }
 }
 

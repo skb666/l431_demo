@@ -9,6 +9,7 @@ static REG_T s_reg_list[] = {
     {REG_SYSTEM_CTRL, REG_RW, reg_read_cb_system_ctrl, reg_write_cb_system_ctrl},
     {REG_UPDATE_DATA, REG_RW, reg_read_cb_update_status, reg_write_cb_update_data},
     {REG_UPDATE_STATUS, REG_RO, reg_read_cb_update_status, NULL},
+    {REG_GPIO_CTRL, REG_RW, reg_read_cb_gpio_ctrl, reg_write_cb_gpio_ctrl},
 };
 const static uint32_t s_reg_list_size = ARRAY_SIZE(s_reg_list);
 

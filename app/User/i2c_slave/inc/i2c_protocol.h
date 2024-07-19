@@ -11,10 +11,12 @@ extern "C" {
 void reg_read_cb_version(void);
 void reg_read_cb_system_ctrl(void);
 void reg_read_cb_update_status(void);
+void reg_read_cb_gpio_ctrl(void);
 
 /* register write callback */
 void reg_write_cb_system_ctrl(void);
 void reg_write_cb_update_data(void);
+void reg_write_cb_gpio_ctrl(void);
 
 #ifdef __cplusplus
 }

@@ -29,6 +29,9 @@
 
 extern UPDATE_PKG g_update_pkg;
 
+static GPIO_TypeDef *s_GPIOx = NULL;
+static uint32_t s_Pin;
+
 void reg_read_cb_version(void) {
   SYS_PARAM *sys = sys_param_get();
 
@@ -115,4 +118,118 @@ void reg_read_cb_update_status(void) {
   SYS_PARAM *sys = sys_param_get();
 
   I2C_PUT_NUM(uint16_t, sys->ctrl.update.status);
+}
+
+void reg_write_cb_gpio_ctrl(void) {
+  uint16_t value;
+
+  if (i2c_slave_rx_size() < sizeof(uint16_t)) {
+    return;
+  }
+
+  I2C_GET_NUM(uint16_t, value);
+
+  switch ((value >> 12) & 0xF) {
+    case 0x0: {
+      s_GPIOx = GPIOA;
+    } break;
+    case 0x1: {
+      s_GPIOx = GPIOB;
+    } break;
+    case 0x2: {
+      s_GPIOx = GPIOC;
+    } break;
+    case 0x3: {
+      s_GPIOx = GPIOD;
+    } break;
+    case 0x7: {
+      s_GPIOx = GPIOH;
+    } break;
+    default: {
+      s_GPIOx = NULL;
+    }
+  }
+
+  switch ((value >> 8) & 0xF) {
+    case 0x0: {
+      s_Pin = LL_GPIO_PIN_0;
+    } break;
+    case 0x1: {
+      s_Pin = LL_GPIO_PIN_1;
+    } break;
+    case 0x2: {
+      s_Pin = LL_GPIO_PIN_2;
+    } break;
+    case 0x3: {
+      s_Pin = LL_GPIO_PIN_3;
+    } break;
+    case 0x4: {
+      s_Pin = LL_GPIO_PIN_4;
+    } break;
+    case 0x5: {
+      s_Pin = LL_GPIO_PIN_5;
+    } break;
+    case 0x6: {
+      s_Pin = LL_GPIO_PIN_6;
+    } break;
+    case 0x7: {
+      s_Pin = LL_GPIO_PIN_7;
+    } break;
+    case 0x8: {
+      s_Pin = LL_GPIO_PIN_8;
+    } break;
+    case 0x9: {
+      s_Pin = LL_GPIO_PIN_9;
+    } break;
+    case 0xa: {
+      s_Pin = LL_GPIO_PIN_10;
+    } break;
+    case 0xb: {
+      s_Pin = LL_GPIO_PIN_11;
+    } break;
+    case 0xc: {
+      s_Pin = LL_GPIO_PIN_12;
+    } break;
+    case 0xd: {
+      s_Pin = LL_GPIO_PIN_13;
+    } break;
+    case 0xe: {
+      s_Pin = LL_GPIO_PIN_14;
+    } break;
+    case 0xf: {
+      s_Pin = LL_GPIO_PIN_15;
+    } break;
+    default: {
+      s_Pin = 0;
+    }
+  }
+
+  switch (value & 0xFF) {
+    case 0: {
+      if (LL_GPIO_MODE_OUTPUT == LL_GPIO_GetPinMode(s_GPIOx, s_Pin)) {
+        LL_GPIO_ResetOutputPin(s_GPIOx, s_Pin);
+      }
+    } break;
+    case 1: {
+      if (LL_GPIO_MODE_OUTPUT == LL_GPIO_GetPinMode(s_GPIOx, s_Pin)) {
+        LL_GPIO_SetOutputPin(s_GPIOx, s_Pin);
+      }
+    } break;
+    default: {
+    }
+  }
+}
+
+void reg_read_cb_gpio_ctrl(void) {
+  uint16_t gpio_level = 0xFFFF;
+
+  if ((s_GPIOx != NULL) && (s_Pin != 0)) {
+    if (LL_GPIO_MODE_INPUT == LL_GPIO_GetPinMode(s_GPIOx, s_Pin)) {
+      gpio_level = (uint16_t)LL_GPIO_IsInputPinSet(s_GPIOx, s_Pin);
+    } else if (LL_GPIO_MODE_OUTPUT == LL_GPIO_GetPinMode(s_GPIOx, s_Pin)) {
+      gpio_level = (uint16_t)LL_GPIO_IsOutputPinSet(s_GPIOx, s_Pin);
+    }
+  }
+
+  I2C_PUT_NUM(uint16_t, gpio_level);
 }
