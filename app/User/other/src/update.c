@@ -57,7 +57,7 @@ static UPDATE_INFO s_update_info;
 
 static BOOT_PARAM boot_param_default = {
     .update_needed = 0,
-    .app_status = STATUS_BOOT,
+    .app_status = STATUS_NORM,
     .back_to_app = 0,
     .version = VERSION_IAP,
 #if defined(USING_UPDATE_BACKUP_IN_BLD) || defined(USING_UPDATE_BACKUP_IN_APP)
@@ -867,14 +867,14 @@ void update_pkg_process(void) {
 #ifdef UPDATE_SUPPORT_BACKUP
           if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
             s_update_info.boot_param.update_needed = 0;
-            s_update_info.boot_param.app_status = STATUS_BOOT;
+            s_update_info.boot_param.app_status = STATUS_NORM;
           } else {
             s_update_info.boot_param.update_needed = 1;
             s_update_info.boot_param.app_status = STATUS_LOAD;
           }
 #else  /* UPDATE_SUPPORT_BACKUP */
           s_update_info.boot_param.update_needed = 0;
-          s_update_info.boot_param.app_status = STATUS_BOOT;
+          s_update_info.boot_param.app_status = STATUS_NORM;
 #endif /* UPDATE_SUPPORT_BACKUP */
           if (boot_param_update(&s_update_info.boot_param)) {
             /* 理论上不应该发生 */
@@ -889,7 +889,7 @@ void update_pkg_process(void) {
 #ifdef UPDATE_SUPPORT_BACKUP
           if (s_update_info.boot_param.update_type == UPDATE_OVERWRITE) {
             s_update_info.boot_param.update_needed = 0;
-            s_update_info.boot_param.app_status = STATUS_BOOT;
+            s_update_info.boot_param.app_status = STATUS_NORM;
             s_update_info.boot_param.back_to_app = 0;
             s_update_info.boot_param.from_app = 0;
             if (boot_param_update(&s_update_info.boot_param)) {
@@ -933,7 +933,7 @@ void update_pkg_process(void) {
           }
 #else  /* UPDATE_SUPPORT_BACKUP */
           s_update_info.boot_param.update_needed = 0;
-          s_update_info.boot_param.app_status = STATUS_BOOT;
+          s_update_info.boot_param.app_status = STATUS_NORM;
           s_update_info.boot_param.back_to_app = 0;
           s_update_info.boot_param.from_app = 0;
           if (boot_param_update(&s_update_info.boot_param)) {
